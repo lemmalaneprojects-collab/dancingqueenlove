@@ -57,6 +57,13 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        "glow-pink": "hsl(var(--glow-pink))",
+        "glow-gold": "hsl(var(--glow-gold))",
+        "glow-teal": "hsl(var(--glow-teal))",
+      },
+      fontFamily: {
+        display: ["Fredoka", "sans-serif"],
+        body: ["Space Grotesk", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
