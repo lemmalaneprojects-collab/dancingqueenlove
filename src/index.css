@@ -2,52 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 330 30% 8%;
-    --foreground: 45 100% 95%;
+    --background: 330 30% 97%;
+    --foreground: 280 30% 20%;
 
-    --card: 330 25% 12%;
-    --card-foreground: 45 100% 95%;
+    --card: 0 0% 100%;
+    --card-foreground: 280 30% 20%;
 
-    --popover: 330 25% 12%;
-    --popover-foreground: 45 100% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 280 30% 20%;
 
-    --primary: 340 80% 60%;
+    --primary: 330 60% 72%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 170 60% 45%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 170 45% 78%;
+    --secondary-foreground: 170 40% 20%;
 
-    --muted: 330 20% 18%;
-    --muted-foreground: 330 15% 60%;
+    --muted: 260 20% 93%;
+    --muted-foreground: 260 10% 50%;
 
-    --accent: 45 100% 60%;
-    --accent-foreground: 330 30% 8%;
+    --accent: 270 50% 82%;
+    --accent-foreground: 270 40% 20%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 65%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 330 20% 22%;
-    --input: 330 20% 22%;
-    --ring: 340 80% 60%;
+    --border: 330 20% 90%;
+    --input: 330 20% 90%;
+    --ring: 330 60% 72%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;
 
-    --sidebar-background: 330 25% 10%;
-    --sidebar-foreground: 45 100% 95%;
-    --sidebar-primary: 340 80% 60%;
+    --peach: 20 80% 82%;
+    --baby-blue: 200 60% 82%;
+    --mint: 160 45% 80%;
+    --lavender: 270 50% 85%;
+    --butter: 45 80% 85%;
+    --coral: 5 70% 75%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 280 30% 20%;
+    --sidebar-primary: 330 60% 72%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 330 20% 18%;
-    --sidebar-accent-foreground: 45 100% 95%;
-    --sidebar-border: 330 20% 22%;
-    --sidebar-ring: 340 80% 60%;
-
-    --glow-pink: 340 80% 60%;
-    --glow-gold: 45 100% 60%;
-    --glow-teal: 170 60% 45%;
+    --sidebar-accent: 260 20% 93%;
+    --sidebar-accent-foreground: 280 30% 20%;
+    --sidebar-border: 330 20% 90%;
+    --sidebar-ring: 330 60% 72%;
   }
 }
 
@@ -55,7 +58,6 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground font-body;
   }
@@ -63,50 +65,47 @@
 
 @layer utilities {
   .font-display {
-    font-family: 'Fredoka', sans-serif;
+    font-family: 'Nunito', sans-serif;
   }
-
   .font-body {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Quicksand', sans-serif;
   }
-
-  .glow-pink {
-    box-shadow: 0 0 30px hsl(340 80% 60% / 0.4), 0 0 60px hsl(340 80% 60% / 0.2);
-  }
-
-  .glow-gold {
-    box-shadow: 0 0 30px hsl(45 100% 60% / 0.4), 0 0 60px hsl(45 100% 60% / 0.2);
-  }
-
-  .glow-teal {
-    box-shadow: 0 0 30px hsl(170 60% 45% / 0.4), 0 0 60px hsl(170 60% 45% / 0.2);
-  }
-
-  .text-glow {
-    text-shadow: 0 0 20px hsl(340 80% 60% / 0.6), 0 0 40px hsl(340 80% 60% / 0.3);
-  }
-
   .glass {
-    @apply bg-card/60 backdrop-blur-xl border border-border/50;
+    @apply bg-card/80 backdrop-blur-md border border-border/60 shadow-sm;
+  }
+  .bubble-shadow {
+    box-shadow: 0 2px 12px hsl(330 60% 72% / 0.15);
+  }
+  .cute-shadow {
+    box-shadow: 0 4px 20px hsl(270 50% 82% / 0.2), 0 1px 4px hsl(330 60% 72% / 0.1);
   }
 }
 
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(340 80% 60% / 0.3); }
-  50% { box-shadow: 0 0 40px hsl(340 80% 60% / 0.6), 0 0 80px hsl(45 100% 60% / 0.2); }
+@keyframes bounce-in {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-6px); }
 }
 
-@keyframes disco-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
 }
 
-@keyframes sparkle {
-  0%, 100% { opacity: 0.3; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.2); }
+@keyframes pop-in {
+  0% { transform: scale(0); opacity: 0; }
+  80% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

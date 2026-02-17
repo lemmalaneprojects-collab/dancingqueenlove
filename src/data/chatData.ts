@@ -1,0 +1,49 @@
+export interface ChatContact {
+  id: string;
+  name: string;
+  avatar: string;
+  lastMessage: string;
+  lastTime: string;
+  unread: number;
+  online: boolean;
+  connectionType: "hotspot" | "bluetooth";
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  text?: string;
+  sticker?: string;
+  timestamp: string;
+  isMe: boolean;
+}
+
+export const DEMO_CONTACTS: ChatContact[] = [
+  { id: "1", name: "Aira 🇵🇭", avatar: "🧑‍🦱", lastMessage: "Kamusta ka? 😊", lastTime: "2m", unread: 3, online: true, connectionType: "hotspot" },
+  { id: "2", name: "Minh 🇻🇳", avatar: "👩", lastMessage: "Sent a sticker 🧋", lastTime: "15m", unread: 1, online: true, connectionType: "bluetooth" },
+  { id: "3", name: "Putri 🇮🇩", avatar: "👧", lastMessage: "Ayo kita makan!", lastTime: "1h", unread: 0, online: true, connectionType: "hotspot" },
+  { id: "4", name: "Somchai 🇹🇭", avatar: "🧑", lastMessage: "Sawasdee krub 🙏", lastTime: "2h", unread: 0, online: false, connectionType: "bluetooth" },
+  { id: "5", name: "Lina 🇲🇾", avatar: "👩‍🦰", lastMessage: "Jom lepak!", lastTime: "3h", unread: 0, online: false, connectionType: "hotspot" },
+  { id: "6", name: "Dara 🇰🇭", avatar: "👱‍♀️", lastMessage: "See you later! 🌺", lastTime: "5h", unread: 0, online: false, connectionType: "bluetooth" },
+];
+
+export const DEMO_MESSAGES: Record<string, Message[]> = {
+  "1": [
+    { id: "m1", senderId: "1", text: "Hiii! Are you nearby? 📡", timestamp: "10:30 AM", isMe: false },
+    { id: "m2", senderId: "me", text: "Yes! Connected via hotspot 🎉", timestamp: "10:31 AM", isMe: true },
+    { id: "m3", senderId: "1", text: "Yay! Let's chat!", timestamp: "10:31 AM", isMe: false },
+    { id: "m4", senderId: "1", sticker: "💖", timestamp: "10:32 AM", isMe: false },
+    { id: "m5", senderId: "me", sticker: "🧋", timestamp: "10:33 AM", isMe: true },
+    { id: "m6", senderId: "1", text: "Kamusta ka? 😊", timestamp: "10:35 AM", isMe: false },
+  ],
+  "2": [
+    { id: "m7", senderId: "2", text: "Xin chào! 🌸", timestamp: "9:00 AM", isMe: false },
+    { id: "m8", senderId: "me", text: "Hey Minh! Connected via BT!", timestamp: "9:02 AM", isMe: true },
+    { id: "m9", senderId: "2", sticker: "🧋", timestamp: "9:05 AM", isMe: false },
+  ],
+  "3": [
+    { id: "m10", senderId: "3", text: "Hai hai! 🌺", timestamp: "8:00 AM", isMe: false },
+    { id: "m11", senderId: "me", text: "Putri! Apa kabar?", timestamp: "8:05 AM", isMe: true },
+    { id: "m12", senderId: "3", text: "Ayo kita makan!", timestamp: "8:10 AM", isMe: false },
+  ],
+};
