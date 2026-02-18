@@ -1,9 +1,18 @@
-import { ArrowLeft, Camera, Edit3 } from "lucide-react";
+import { Camera, Edit3, Copy, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import BottomNav from "@/components/BottomNav";
+import { MY_PROFILE } from "@/data/chatData";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
+
+  const copyUID = () => {
+    navigator.clipboard.writeText(MY_PROFILE.uid).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -16,23 +25,34 @@ export default function ProfilePage() {
         <div className="relative">
           <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/40 to-accent/40 p-1 cute-shadow">
             <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-5xl">
-              🧑‍💻
+              {MY_PROFILE.avatar}
             </div>
           </div>
           <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center border-2 border-card">
             <Camera className="w-3.5 h-3.5" />
           </button>
         </div>
-        <h2 className="font-display font-extrabold text-lg mt-3 text-foreground">You</h2>
+        <h2 className="font-display font-extrabold text-lg mt-3 text-foreground">{MY_PROFILE.name}</h2>
         <p className="text-xs text-muted-foreground font-body">SEA-U member since 2025</p>
+
+        {/* UID Card */}
+        <button
+          onClick={copyUID}
+          className="mt-3 flex items-center gap-2 px-4 py-2 rounded-2xl bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all active:scale-95"
+        >
+          <span className="text-[10px] font-display font-semibold text-muted-foreground uppercase tracking-wider">Your ID</span>
+          <span className="font-display font-extrabold text-sm text-primary tracking-widest">{MY_PROFILE.uid}</span>
+          {copied ? <Check className="w-3.5 h-3.5 text-mint" /> : <Copy className="w-3.5 h-3.5 text-primary" />}
+        </button>
+        <p className="text-[10px] text-muted-foreground mt-1">Share this ID so friends can chat you from anywhere! 🌏</p>
       </div>
 
       {/* Profile fields */}
       <div className="px-4 space-y-3">
         {[
-          { label: "Display Name", value: "CuteUser_123", icon: "✨" },
-          { label: "Status", value: "Vibing with SEA friends~ 🌺", icon: "💬" },
-          { label: "Country", value: "Philippines 🇵🇭", icon: "🌏" },
+          { label: "Display Name", value: MY_PROFILE.name, icon: "✨" },
+          { label: "Status", value: MY_PROFILE.status, icon: "💬" },
+          { label: "Country", value: MY_PROFILE.country, icon: "🌏" },
           { label: "Language", value: "English, Filipino", icon: "🗣️" },
           { label: "Favorite Sticker", value: "🧋", icon: "⭐" },
         ].map((field, i) => (

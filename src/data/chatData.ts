@@ -1,12 +1,14 @@
 export interface ChatContact {
   id: string;
+  uid: string;
   name: string;
   avatar: string;
   lastMessage: string;
   lastTime: string;
   unread: number;
   online: boolean;
-  connectionType: "hotspot" | "bluetooth";
+  connectionType: "hotspot" | "bluetooth" | "uid";
+  country: string;
 }
 
 export interface Message {
@@ -18,13 +20,21 @@ export interface Message {
   isMe: boolean;
 }
 
+export const MY_PROFILE = {
+  uid: "SEA-810042",
+  name: "CuteUser_123",
+  avatar: "🧑‍💻",
+  country: "Philippines 🇵🇭",
+  status: "Vibing with SEA friends~ 🌺",
+};
+
 export const DEMO_CONTACTS: ChatContact[] = [
-  { id: "1", name: "Aira 🇵🇭", avatar: "🧑‍🦱", lastMessage: "Kamusta ka? 😊", lastTime: "2m", unread: 3, online: true, connectionType: "hotspot" },
-  { id: "2", name: "Minh 🇻🇳", avatar: "👩", lastMessage: "Sent a sticker 🧋", lastTime: "15m", unread: 1, online: true, connectionType: "bluetooth" },
-  { id: "3", name: "Putri 🇮🇩", avatar: "👧", lastMessage: "Ayo kita makan!", lastTime: "1h", unread: 0, online: true, connectionType: "hotspot" },
-  { id: "4", name: "Somchai 🇹🇭", avatar: "🧑", lastMessage: "Sawasdee krub 🙏", lastTime: "2h", unread: 0, online: false, connectionType: "bluetooth" },
-  { id: "5", name: "Lina 🇲🇾", avatar: "👩‍🦰", lastMessage: "Jom lepak!", lastTime: "3h", unread: 0, online: false, connectionType: "hotspot" },
-  { id: "6", name: "Dara 🇰🇭", avatar: "👱‍♀️", lastMessage: "See you later! 🌺", lastTime: "5h", unread: 0, online: false, connectionType: "bluetooth" },
+  { id: "1", uid: "SEA-290178", name: "Aira 🇵🇭", avatar: "🧑‍🦱", lastMessage: "Kamusta ka? 😊", lastTime: "2m", unread: 3, online: true, connectionType: "hotspot", country: "Philippines" },
+  { id: "2", uid: "SEA-537261", name: "Minh 🇻🇳", avatar: "👩", lastMessage: "Sent a sticker 🧋", lastTime: "15m", unread: 1, online: true, connectionType: "bluetooth", country: "Vietnam" },
+  { id: "3", uid: "SEA-418930", name: "Putri 🇮🇩", avatar: "👧", lastMessage: "Ayo kita makan!", lastTime: "1h", unread: 0, online: true, connectionType: "uid", country: "Indonesia" },
+  { id: "4", uid: "SEA-602847", name: "Somchai 🇹🇭", avatar: "🧑", lastMessage: "Sawasdee krub 🙏", lastTime: "2h", unread: 0, online: false, connectionType: "bluetooth", country: "Thailand" },
+  { id: "5", uid: "SEA-753194", name: "Lina 🇲🇾", avatar: "👩‍🦰", lastMessage: "Jom lepak!", lastTime: "3h", unread: 0, online: false, connectionType: "uid", country: "Malaysia" },
+  { id: "6", uid: "SEA-884562", name: "Dara 🇰🇭", avatar: "👱‍♀️", lastMessage: "See you later! 🌺", lastTime: "5h", unread: 0, online: false, connectionType: "bluetooth", country: "Cambodia" },
 ];
 
 export const DEMO_MESSAGES: Record<string, Message[]> = {

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { ChatContact } from "@/data/chatData";
-import { Bluetooth, Wifi } from "lucide-react";
+import { Bluetooth, Wifi, Globe } from "lucide-react";
 
 interface ChatListItemProps {
   contact: ChatContact;
@@ -8,6 +8,14 @@ interface ChatListItemProps {
 
 export default function ChatListItem({ contact }: ChatListItemProps) {
   const navigate = useNavigate();
+
+  const connectionIcon = () => {
+    switch (contact.connectionType) {
+      case "bluetooth": return <Bluetooth className="w-3 h-3 text-baby-blue flex-shrink-0" />;
+      case "hotspot": return <Wifi className="w-3 h-3 text-mint flex-shrink-0" />;
+      case "uid": return <Globe className="w-3 h-3 text-primary flex-shrink-0" />;
+    }
+  };
 
   return (
     <button
@@ -28,13 +36,13 @@ export default function ChatListItem({ contact }: ChatListItemProps) {
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-center gap-1.5">
           <h3 className="font-display font-bold text-sm text-foreground truncate">{contact.name}</h3>
-          {contact.connectionType === "bluetooth" ? (
-            <Bluetooth className="w-3 h-3 text-baby-blue flex-shrink-0" />
-          ) : (
-            <Wifi className="w-3 h-3 text-mint flex-shrink-0" />
-          )}
+          {connectionIcon()}
         </div>
-        <p className="text-xs text-muted-foreground truncate">{contact.lastMessage}</p>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] text-muted-foreground/70 font-mono">{contact.uid}</span>
+          <span className="text-[10px] text-muted-foreground">·</span>
+          <p className="text-xs text-muted-foreground truncate">{contact.lastMessage}</p>
+        </div>
       </div>
 
       {/* Meta */}
