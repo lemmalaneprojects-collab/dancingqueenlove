@@ -3,12 +3,14 @@ import { Search, Plus } from "lucide-react";
 import { DEMO_CONTACTS } from "@/data/chatData";
 import ChatListItem from "@/components/ChatListItem";
 import BottomNav from "@/components/BottomNav";
+import AddFriendDialog from "@/components/AddFriendDialog";
 import logo from "@/assets/sea-u-logo.png";
 
 export default function ChatsPage() {
   const [search, setSearch] = useState("");
+  const [showAddFriend, setShowAddFriend] = useState(false);
   const filtered = DEMO_CONTACTS.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase())
+    c.name.toLowerCase().includes(search.toLowerCase()) || c.uid.toLowerCase().includes(search.toLowerCase())
   );
   const onlineCount = DEMO_CONTACTS.filter((c) => c.online).length;
 
@@ -24,7 +26,10 @@ export default function ChatsPage() {
               <p className="text-[10px] text-muted-foreground font-body">{onlineCount} nearby • offline chat</p>
             </div>
           </div>
-          <button className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors">
+          <button
+            onClick={() => setShowAddFriend(true)}
+            className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors"
+          >
             <Plus className="w-5 h-5" />
           </button>
         </div>
@@ -73,6 +78,7 @@ export default function ChatsPage() {
         )}
       </div>
 
+      <AddFriendDialog open={showAddFriend} onClose={() => setShowAddFriend(false)} />
       <BottomNav />
     </div>
   );

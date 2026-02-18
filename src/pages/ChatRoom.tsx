@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Smile, Send, Bluetooth, Wifi, MoreVertical } from "lucide-react";
+import { ArrowLeft, Smile, Send, Bluetooth, Wifi, Globe, MoreVertical } from "lucide-react";
 import { DEMO_CONTACTS, DEMO_MESSAGES, type Message } from "@/data/chatData";
 import MessageBubble from "@/components/MessageBubble";
 import StickerPicker from "@/components/StickerPicker";
@@ -62,12 +62,15 @@ export default function ChatRoom() {
           <div className="flex items-center gap-1">
             {contact.connectionType === "bluetooth" ? (
               <Bluetooth className="w-3 h-3 text-baby-blue" />
+            ) : contact.connectionType === "uid" ? (
+              <Globe className="w-3 h-3 text-primary" />
             ) : (
               <Wifi className="w-3 h-3 text-mint" />
             )}
             <span className="text-[10px] text-muted-foreground">
               {contact.online ? "Connected" : "Last seen " + contact.lastTime + " ago"}
             </span>
+            <span className="text-[10px] text-muted-foreground/60 font-mono ml-1">{contact.uid}</span>
           </div>
         </div>
         <button className="p-2 rounded-xl hover:bg-muted transition-colors">
@@ -82,6 +85,8 @@ export default function ChatRoom() {
           <div className="bg-muted/60 rounded-full px-4 py-1.5 text-[10px] font-display font-semibold text-muted-foreground flex items-center gap-1.5">
             {contact.connectionType === "bluetooth" ? (
               <><Bluetooth className="w-3 h-3 text-baby-blue" /> Connected via Bluetooth</>
+            ) : contact.connectionType === "uid" ? (
+              <><Globe className="w-3 h-3 text-primary" /> Connected via SEA-U ID 🌏</>
             ) : (
               <><Wifi className="w-3 h-3 text-mint" /> Connected via Hotspot</>
             )}
