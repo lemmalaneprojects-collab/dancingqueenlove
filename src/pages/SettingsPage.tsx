@@ -1,4 +1,5 @@
 import { Moon, Bell, Shield, Palette, Info, ChevronRight, Wifi, Bluetooth, Volume2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { useState } from "react";
 import logo from "@/assets/sea-u-logo.png";
@@ -35,9 +36,9 @@ function ToggleRow({ icon, label, description, enabled, onToggle }: ToggleRowPro
   );
 }
 
-function LinkRow({ icon, label, description }: { icon: React.ReactNode; label: string; description: string }) {
+function LinkRow({ icon, label, description, onClick }: { icon: React.ReactNode; label: string; description: string; onClick?: () => void }) {
   return (
-    <button className="w-full bg-card border border-border rounded-2xl p-4 flex items-center gap-3 cute-shadow hover:bg-muted/30 transition-colors">
+    <button onClick={onClick} className="w-full bg-card border border-border rounded-2xl p-4 flex items-center gap-3 cute-shadow hover:bg-muted/30 transition-colors">
       <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">{icon}</div>
       <div className="flex-1 text-left">
         <p className="font-display font-bold text-sm text-foreground">{label}</p>
@@ -49,6 +50,7 @@ function LinkRow({ icon, label, description }: { icon: React.ReactNode; label: s
 }
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState(true);
   const [sound, setSound] = useState(true);
   const [autoConnect, setAutoConnect] = useState(true);
@@ -98,9 +100,9 @@ export default function SettingsPage() {
 
         {/* General */}
         <p className="font-display font-bold text-xs text-muted-foreground uppercase tracking-wider px-1 mt-4">General</p>
-        <LinkRow icon={<Palette className="w-5 h-5 text-lavender" />} label="Appearance" description="Theme and display options" />
-        <LinkRow icon={<Shield className="w-5 h-5 text-mint" />} label="Privacy" description="Visibility and data controls" />
-        <LinkRow icon={<Info className="w-5 h-5 text-baby-blue" />} label="About SEA-U" description="Version 1.0.0 • Made with 💖" />
+        <LinkRow icon={<Palette className="w-5 h-5 text-lavender" />} label="Appearance" description="Theme and display options" onClick={() => navigate("/settings/appearance")} />
+        <LinkRow icon={<Shield className="w-5 h-5 text-mint" />} label="Privacy" description="Visibility and data controls" onClick={() => navigate("/settings/privacy")} />
+        <LinkRow icon={<Info className="w-5 h-5 text-baby-blue" />} label="About SEA-U" description="Version 1.0.0 • Made with 💖" onClick={() => navigate("/settings/about")} />
       </div>
 
       {/* Footer */}
