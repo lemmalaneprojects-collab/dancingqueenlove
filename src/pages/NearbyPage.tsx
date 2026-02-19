@@ -2,20 +2,24 @@ import { Wifi, Bluetooth, Globe, RefreshCw, Search, Copy, Check } from "lucide-r
 import BottomNav from "@/components/BottomNav";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MY_PROFILE, DEMO_CONTACTS } from "@/data/chatData";
+import { MY_PROFILE } from "@/data/chatData";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const NEARBY_DEVICES = [
-  { id: "d1", name: "Aira's Phone", type: "hotspot" as const, signal: "Strong", avatar: "🧑‍🦱" },
-  { id: "d2", name: "Minh's Galaxy", type: "bluetooth" as const, signal: "Medium", avatar: "👩" },
-  { id: "d3", name: "Putri's iPhone", type: "hotspot" as const, signal: "Strong", avatar: "👧" },
+  { id: "d1", name: "Aira's iPhone 14", type: "hotspot" as const, signal: "Strong", avatar: "👩" },
+  { id: "d2", name: "Minh's Galaxy S24", type: "bluetooth" as const, signal: "Medium", avatar: "👨" },
+  { id: "d3", name: "Kanya's Pixel 8", type: "hotspot" as const, signal: "Strong", avatar: "👩" },
 ];
 
 const GLOBAL_USERS = [
-  { uid: "SEA-112049", name: "Nhi 🇻🇳", avatar: "👩‍🎤", country: "Vietnam", status: "Let's be friends~ 🌸" },
-  { uid: "SEA-339210", name: "Arief 🇮🇩", avatar: "🧔", country: "Indonesia", status: "Gaming & chatting 🎮" },
-  { uid: "SEA-667821", name: "Mei Lin 🇸🇬", avatar: "👩‍💼", country: "Singapore", status: "Hello from SG! 🇸🇬" },
-  { uid: "SEA-445902", name: "Kanya 🇹🇭", avatar: "👧", country: "Thailand", status: "Sawasdee~ 🙏" },
-  { uid: "SEA-998134", name: "Rizal 🇲🇾", avatar: "🧑", country: "Malaysia", status: "Apa khabar! 🌺" },
+  { uid: "SEA-112049", name: "Nhi Nguyen", avatar: "👩", country: "Vietnam 🇻🇳", status: "Let's be friends~ 🌸" },
+  { uid: "SEA-339210", name: "Arief Pratama", avatar: "👨", country: "Indonesia 🇮🇩", status: "Gaming & chatting 🎮" },
+  { uid: "SEA-667821", name: "Mei Lin Tan", avatar: "👩", country: "Singapore 🇸🇬", status: "Hello from SG!" },
+  { uid: "SEA-445902", name: "Kanya Siriwat", avatar: "👩", country: "Thailand 🇹🇭", status: "Sawasdee~ 🙏" },
+  { uid: "SEA-998134", name: "Rizal Abidin", avatar: "👨", country: "Malaysia 🇲🇾", status: "Apa khabar! 🌺" },
+  { uid: "SEA-201847", name: "Dara Sokha", avatar: "👩", country: "Cambodia 🇰🇭", status: "Sour sdey! 🌻" },
+  { uid: "SEA-773521", name: "Thuy Le", avatar: "👩", country: "Vietnam 🇻🇳", status: "Coffee lover ☕" },
+  { uid: "SEA-556092", name: "Bagus Wibowo", avatar: "👨", country: "Indonesia 🇮🇩", status: "Exploring SEA 🗺️" },
 ];
 
 type Tab = "nearby" | "global";
@@ -26,6 +30,7 @@ export default function NearbyPage() {
   const [globalSearch, setGlobalSearch] = useState("");
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
+  const { profileVisible } = useSettings();
 
   const handleScan = () => {
     setScanning(true);
@@ -51,13 +56,12 @@ export default function NearbyPage() {
         <h1 className="font-display font-extrabold text-xl text-foreground mb-1">Discover</h1>
         <p className="text-xs text-muted-foreground font-body">Find people nearby or across SEA 🌏</p>
 
-        {/* Tab switcher */}
         <div className="flex gap-2 mt-3">
           <button
             onClick={() => setTab("nearby")}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-2xl font-display font-bold text-xs transition-all duration-200 ${
               tab === "nearby"
-                ? "bg-mint/20 text-secondary-foreground border border-mint/30"
+                ? "bg-secondary/30 text-secondary-foreground border border-secondary/40"
                 : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
             }`}
           >
@@ -80,10 +84,9 @@ export default function NearbyPage() {
 
       {tab === "nearby" ? (
         <>
-          {/* Connection options */}
           <div className="px-4 py-4 grid grid-cols-2 gap-3">
             <button className="bg-card border border-border rounded-3xl p-4 flex flex-col items-center gap-2 cute-shadow hover:scale-105 active:scale-95 transition-all">
-              <div className="w-12 h-12 rounded-2xl bg-mint/30 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-secondary/30 flex items-center justify-center">
                 <Wifi className="w-6 h-6 text-secondary-foreground" />
               </div>
               <span className="font-display font-bold text-xs text-foreground">Hotspot</span>
@@ -98,7 +101,6 @@ export default function NearbyPage() {
             </button>
           </div>
 
-          {/* Scan button */}
           <div className="px-4 mb-4">
             <button
               onClick={handleScan}
@@ -109,7 +111,6 @@ export default function NearbyPage() {
             </button>
           </div>
 
-          {/* Devices list */}
           <div className="px-4">
             <h2 className="font-display font-bold text-sm text-foreground mb-3">Devices Found</h2>
             <div className="space-y-2">
@@ -157,7 +158,11 @@ export default function NearbyPage() {
                   {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-1">Share this ID to let anyone in SEA chat with you 🌏</p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {profileVisible
+                  ? "You're visible in the directory 🌏"
+                  : "You're hidden from the directory 🔒"}
+              </p>
             </div>
           </div>
 

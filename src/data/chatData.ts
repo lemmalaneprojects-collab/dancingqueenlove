@@ -29,12 +29,16 @@ export const MY_PROFILE = {
 };
 
 export const DEMO_CONTACTS: ChatContact[] = [
-  { id: "1", uid: "SEA-290178", name: "Aira 🇵🇭", avatar: "🧑‍🦱", lastMessage: "Kamusta ka? 😊", lastTime: "2m", unread: 3, online: true, connectionType: "hotspot", country: "Philippines" },
-  { id: "2", uid: "SEA-537261", name: "Minh 🇻🇳", avatar: "👩", lastMessage: "Sent a sticker 🧋", lastTime: "15m", unread: 1, online: true, connectionType: "bluetooth", country: "Vietnam" },
-  { id: "3", uid: "SEA-418930", name: "Putri 🇮🇩", avatar: "👧", lastMessage: "Ayo kita makan!", lastTime: "1h", unread: 0, online: true, connectionType: "uid", country: "Indonesia" },
-  { id: "4", uid: "SEA-602847", name: "Somchai 🇹🇭", avatar: "🧑", lastMessage: "Sawasdee krub 🙏", lastTime: "2h", unread: 0, online: false, connectionType: "bluetooth", country: "Thailand" },
-  { id: "5", uid: "SEA-753194", name: "Lina 🇲🇾", avatar: "👩‍🦰", lastMessage: "Jom lepak!", lastTime: "3h", unread: 0, online: false, connectionType: "uid", country: "Malaysia" },
-  { id: "6", uid: "SEA-884562", name: "Dara 🇰🇭", avatar: "👱‍♀️", lastMessage: "See you later! 🌺", lastTime: "5h", unread: 0, online: false, connectionType: "bluetooth", country: "Cambodia" },
+  { id: "1", uid: "SEA-290178", name: "Aira Santos", avatar: "👩", lastMessage: "Kamusta ka? 😊", lastTime: "2m", unread: 3, online: true, connectionType: "hotspot", country: "Philippines 🇵🇭" },
+  { id: "2", uid: "SEA-537261", name: "Minh Tran", avatar: "👨", lastMessage: "Sent a sticker 🧋", lastTime: "15m", unread: 1, online: true, connectionType: "bluetooth", country: "Vietnam 🇻🇳" },
+  { id: "3", uid: "SEA-418930", name: "Putri Wulandari", avatar: "👩", lastMessage: "Ayo kita makan!", lastTime: "1h", unread: 0, online: true, connectionType: "uid", country: "Indonesia 🇮🇩" },
+  { id: "4", uid: "SEA-602847", name: "Somchai Rattana", avatar: "👨", lastMessage: "Sawasdee krub 🙏", lastTime: "2h", unread: 0, online: false, connectionType: "bluetooth", country: "Thailand 🇹🇭" },
+  { id: "5", uid: "SEA-753194", name: "Lina Abdullah", avatar: "👩", lastMessage: "Jom lepak!", lastTime: "3h", unread: 0, online: false, connectionType: "uid", country: "Malaysia 🇲🇾" },
+  { id: "6", uid: "SEA-884562", name: "Dara Sokha", avatar: "👩", lastMessage: "See you later! 🌺", lastTime: "5h", unread: 0, online: false, connectionType: "bluetooth", country: "Cambodia 🇰🇭" },
+  { id: "7", uid: "SEA-120395", name: "Rizal Abidin", avatar: "👨", lastMessage: "Apa khabar bro!", lastTime: "6h", unread: 2, online: true, connectionType: "uid", country: "Malaysia 🇲🇾" },
+  { id: "8", uid: "SEA-667821", name: "Mei Lin Tan", avatar: "👩", lastMessage: "Dinner later? 🍜", lastTime: "8h", unread: 0, online: true, connectionType: "uid", country: "Singapore 🇸🇬" },
+  { id: "9", uid: "SEA-445109", name: "Kanya Siriwat", avatar: "👩", lastMessage: "ส่งรูปมาหน่อย~", lastTime: "12h", unread: 0, online: false, connectionType: "hotspot", country: "Thailand 🇹🇭" },
+  { id: "10", uid: "SEA-998134", name: "Arief Pratama", avatar: "👨", lastMessage: "GG bro! 🎮", lastTime: "1d", unread: 0, online: false, connectionType: "uid", country: "Indonesia 🇮🇩" },
 ];
 
 export const DEMO_MESSAGES: Record<string, Message[]> = {
@@ -55,5 +59,20 @@ export const DEMO_MESSAGES: Record<string, Message[]> = {
     { id: "m10", senderId: "3", text: "Hai hai! 🌺", timestamp: "8:00 AM", isMe: false },
     { id: "m11", senderId: "me", text: "Putri! Apa kabar?", timestamp: "8:05 AM", isMe: true },
     { id: "m12", senderId: "3", text: "Ayo kita makan!", timestamp: "8:10 AM", isMe: false },
+  ],
+  "7": [
+    { id: "m13", senderId: "7", text: "Bro! Kau kat mana sekarang? 😄", timestamp: "2:00 PM", isMe: false },
+    { id: "m14", senderId: "me", text: "Kat rumah je, kenapa?", timestamp: "2:05 PM", isMe: true },
+    { id: "m15", senderId: "7", text: "Apa khabar bro!", timestamp: "2:10 PM", isMe: false },
+  ],
+  "8": [
+    { id: "m16", senderId: "8", text: "Hey! Long time no chat 🌸", timestamp: "11:00 AM", isMe: false },
+    { id: "m17", senderId: "me", text: "Mei Lin! How's Singapore?", timestamp: "11:15 AM", isMe: true },
+    { id: "m18", senderId: "8", text: "Dinner later? 🍜", timestamp: "11:20 AM", isMe: false },
+  ],
+  "10": [
+    { id: "m19", senderId: "10", text: "Main game yuk! 🎮", timestamp: "8:00 PM", isMe: false },
+    { id: "m20", senderId: "me", text: "Boleh! Ranked?", timestamp: "8:05 PM", isMe: true },
+    { id: "m21", senderId: "10", text: "GG bro! 🎮", timestamp: "9:30 PM", isMe: false },
   ],
 };
