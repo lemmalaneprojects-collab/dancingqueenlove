@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import type { ChatContact } from "@/data/chatData";
 import { Bluetooth, Wifi, Globe } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface ChatListItemProps {
   contact: ChatContact;
@@ -8,6 +9,7 @@ interface ChatListItemProps {
 
 export default function ChatListItem({ contact }: ChatListItemProps) {
   const navigate = useNavigate();
+  const { showOnline, showLastSeen } = useSettings();
 
   const connectionIcon = () => {
     switch (contact.connectionType) {
@@ -27,7 +29,7 @@ export default function ChatListItem({ contact }: ChatListItemProps) {
         <div className="w-12 h-12 rounded-full bg-lavender flex items-center justify-center text-2xl cute-shadow">
           {contact.avatar}
         </div>
-        {contact.online && (
+        {showOnline && contact.online && (
           <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-mint border-2 border-card" />
         )}
       </div>
@@ -47,7 +49,7 @@ export default function ChatListItem({ contact }: ChatListItemProps) {
 
       {/* Meta */}
       <div className="flex flex-col items-end gap-1">
-        <span className="text-[10px] text-muted-foreground">{contact.lastTime}</span>
+        {showLastSeen && <span className="text-[10px] text-muted-foreground">{contact.lastTime}</span>}
         {contact.unread > 0 && (
           <span className="bg-primary text-primary-foreground text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
             {contact.unread}

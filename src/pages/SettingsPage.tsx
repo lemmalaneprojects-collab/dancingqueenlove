@@ -1,7 +1,7 @@
 import { Moon, Bell, Shield, Palette, Info, ChevronRight, Wifi, Bluetooth, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
-import { useState } from "react";
+import { useSettings } from "@/contexts/SettingsContext";
 import logo from "@/assets/sea-u-logo.png";
 
 interface ToggleRowProps {
@@ -51,10 +51,7 @@ function LinkRow({ icon, label, description, onClick }: { icon: React.ReactNode;
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState(true);
-  const [sound, setSound] = useState(true);
-  const [autoConnect, setAutoConnect] = useState(true);
-  const [bluetooth, setBluetooth] = useState(false);
+  const settings = useSettings();
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -70,15 +67,15 @@ export default function SettingsPage() {
           icon={<Wifi className="w-5 h-5 text-mint" />}
           label="Auto-connect Hotspot"
           description="Automatically connect to nearby devices"
-          enabled={autoConnect}
-          onToggle={() => setAutoConnect(!autoConnect)}
+          enabled={settings.autoConnect}
+          onToggle={() => settings.update("autoConnect", !settings.autoConnect)}
         />
         <ToggleRow
           icon={<Bluetooth className="w-5 h-5 text-baby-blue" />}
           label="Bluetooth Discovery"
           description="Allow others to find you via Bluetooth"
-          enabled={bluetooth}
-          onToggle={() => setBluetooth(!bluetooth)}
+          enabled={settings.bluetooth}
+          onToggle={() => settings.update("bluetooth", !settings.bluetooth)}
         />
 
         {/* Notifications */}
@@ -87,15 +84,15 @@ export default function SettingsPage() {
           icon={<Bell className="w-5 h-5 text-coral" />}
           label="Notifications"
           description="Get notified of new messages"
-          enabled={notifications}
-          onToggle={() => setNotifications(!notifications)}
+          enabled={settings.notifications}
+          onToggle={() => settings.update("notifications", !settings.notifications)}
         />
         <ToggleRow
           icon={<Volume2 className="w-5 h-5 text-butter" />}
           label="Message Sounds"
           description="Play sound for incoming messages"
-          enabled={sound}
-          onToggle={() => setSound(!sound)}
+          enabled={settings.sound}
+          onToggle={() => settings.update("sound", !settings.sound)}
         />
 
         {/* General */}

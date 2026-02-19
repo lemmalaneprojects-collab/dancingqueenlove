@@ -1,10 +1,26 @@
-import { ArrowLeft, Heart, Globe, Github, Mail, Star, Shield, Wifi } from "lucide-react";
+import { ArrowLeft, Heart, Globe, ExternalLink, Mail, Star, Shield, Wifi, Users, Code } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import logo from "@/assets/sea-u-logo.png";
+import { toast } from "@/hooks/use-toast";
+
+const TEAM = [
+  { name: "Juan dela Cruz", role: "Lead Developer", country: "🇵🇭", avatar: "👨‍💻" },
+  { name: "Nguyen Thi Mai", role: "UI/UX Designer", country: "🇻🇳", avatar: "👩‍🎨" },
+  { name: "Budi Santoso", role: "Backend Engineer", country: "🇮🇩", avatar: "👨‍🔧" },
+  { name: "Siriwan Chaiyaporn", role: "Community Manager", country: "🇹🇭", avatar: "👩‍💼" },
+];
 
 export default function AboutPage() {
   const navigate = useNavigate();
+
+  const handleLink = (label: string, url?: string) => {
+    if (url) {
+      window.open(url, "_blank", "noopener");
+    } else {
+      toast({ title: `${label}`, description: "Coming soon! Stay tuned 🌸" });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -30,7 +46,7 @@ export default function AboutPage() {
           </p>
           <div className="flex items-center gap-2 mt-1">
             <span className="bg-primary/15 text-primary font-display font-bold text-[10px] px-3 py-1 rounded-full">v1.0.0</span>
-            <span className="bg-mint/30 text-foreground font-display font-bold text-[10px] px-3 py-1 rounded-full">Stable</span>
+            <span className="bg-secondary/40 text-foreground font-display font-bold text-[10px] px-3 py-1 rounded-full">Stable</span>
           </div>
         </div>
 
@@ -51,6 +67,28 @@ export default function AboutPage() {
           ))}
         </div>
 
+        {/* Team */}
+        <p className="font-display font-bold text-xs text-muted-foreground uppercase tracking-wider px-1">
+          <Users className="w-3 h-3 inline mr-1" />The Team
+        </p>
+        <div className="space-y-2">
+          {TEAM.map((member, i) => (
+            <div
+              key={i}
+              className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3 cute-shadow"
+              style={{ animation: `pop-in 0.3s ease-out ${i * 0.08}s both` }}
+            >
+              <div className="w-10 h-10 rounded-full bg-lavender flex items-center justify-center text-xl">
+                {member.avatar}
+              </div>
+              <div className="flex-1">
+                <p className="font-display font-bold text-sm text-foreground">{member.name} {member.country}</p>
+                <p className="text-[10px] text-muted-foreground">{member.role}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* Credits */}
         <p className="font-display font-bold text-xs text-muted-foreground uppercase tracking-wider px-1">Credits</p>
         <div className="bg-card border border-border rounded-2xl p-4 cute-shadow space-y-3">
@@ -66,22 +104,31 @@ export default function AboutPage() {
             <Globe className="w-4 h-4 text-baby-blue" />
             <p className="text-xs text-muted-foreground font-body">🇵🇭 🇻🇳 🇮🇩 🇹🇭 🇲🇾 🇰🇭 🇲🇲 🇸🇬 🇱🇦 🇧🇳</p>
           </div>
+          <div className="flex items-center gap-3">
+            <Code className="w-4 h-4 text-lavender" />
+            <p className="text-xs text-muted-foreground font-body">Built with React, TypeScript & Tailwind</p>
+          </div>
         </div>
 
         {/* Links */}
         <p className="font-display font-bold text-xs text-muted-foreground uppercase tracking-wider px-1">Links</p>
         <div className="space-y-2">
           {[
-            { icon: <Github className="w-5 h-5 text-foreground" />, label: "Source Code", desc: "Open source on GitHub" },
-            { icon: <Mail className="w-5 h-5 text-baby-blue" />, label: "Contact Us", desc: "hello@sea-u.app" },
-            { icon: <Star className="w-5 h-5 text-butter" />, label: "Rate SEA-U", desc: "Leave a review ⭐" },
+            { icon: <ExternalLink className="w-5 h-5 text-foreground" />, label: "Source Code", desc: "Open source on GitHub", action: () => handleLink("Source Code", "https://github.com") },
+            { icon: <Mail className="w-5 h-5 text-baby-blue" />, label: "Contact Us", desc: "hello@sea-u.app", action: () => handleLink("Contact Us", "mailto:hello@sea-u.app") },
+            { icon: <Star className="w-5 h-5 text-butter" />, label: "Rate SEA-U", desc: "Leave a review ⭐", action: () => handleLink("Rate SEA-U") },
           ].map((link, i) => (
-            <button key={i} className="w-full bg-card border border-border rounded-2xl p-4 flex items-center gap-3 cute-shadow hover:bg-muted/30 transition-colors">
+            <button
+              key={i}
+              onClick={link.action}
+              className="w-full bg-card border border-border rounded-2xl p-4 flex items-center gap-3 cute-shadow hover:bg-muted/30 transition-colors"
+            >
               <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">{link.icon}</div>
               <div className="flex-1 text-left">
                 <p className="font-display font-bold text-sm text-foreground">{link.label}</p>
                 <p className="text-[10px] text-muted-foreground">{link.desc}</p>
               </div>
+              <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
           ))}
         </div>

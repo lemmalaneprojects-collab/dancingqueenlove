@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Smile, Send, Bluetooth, Wifi, Globe, MoreVertical } from "lucide-react";
 import { DEMO_CONTACTS, DEMO_MESSAGES, type Message } from "@/data/chatData";
+import { useSettings } from "@/contexts/SettingsContext";
 import MessageBubble from "@/components/MessageBubble";
 import StickerPicker from "@/components/StickerPicker";
 
@@ -9,7 +10,10 @@ export default function ChatRoom() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const contact = DEMO_CONTACTS.find((c) => c.id === id);
-  const [messages, setMessages] = useState<Message[]>(DEMO_MESSAGES[id || "1"] || []);
+  const { showOnline, showLastSeen, chatHistoryCleared } = useSettings();
+  const [messages, setMessages] = useState<Message[]>(
+    chatHistoryCleared ? [] : (DEMO_MESSAGES[id || "1"] || [])
+  );
   const [input, setInput] = useState("");
   const [showStickers, setShowStickers] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -53,7 +57,7 @@ export default function ChatRoom() {
           <div className="w-10 h-10 rounded-full bg-lavender flex items-center justify-center text-xl">
             {contact.avatar}
           </div>
-          {contact.online && (
+          {showOnline && contact.online && (
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-mint border-2 border-card" />
           )}
         </div>
@@ -68,7 +72,11 @@ export default function ChatRoom() {
               <Wifi className="w-3 h-3 text-mint" />
             )}
             <span className="text-[10px] text-muted-foreground">
-              {contact.online ? "Connected" : "Last seen " + contact.lastTime + " ago"}
+              {showOnline && contact.online
+                ? "Connected"
+                : showLastSeen
+                ? "Last seen " + contact.lastTime + " ago"
+                : ""}
             </span>
             <span className="text-[10px] text-muted-foreground/60 font-mono ml-1">{contact.uid}</span>
           </div>
@@ -92,6 +100,14 @@ export default function ChatRoom() {
             )}
           </div>
         </div>
+
+        {chatHistoryCleared && messages.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-3xl mb-2">🗑️</p>
+            <p className="text-xs font-display text-muted-foreground">Chat history was cleared</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Send a message to start a new conversation!</p>
+          </div>
+        )}
 
         {messages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} />
