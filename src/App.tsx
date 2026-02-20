@@ -13,6 +13,7 @@ import AppearancePage from "./pages/AppearancePage";
 import PrivacyPage from "./pages/PrivacyPage";
 import AboutPage from "./pages/AboutPage";
 import NotFound from "./pages/NotFound";
+import OnboardingTour from "./components/about/OnboardingTour";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <OnboardingTour />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<ChatsPage />} />

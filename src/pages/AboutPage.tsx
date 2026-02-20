@@ -1,21 +1,18 @@
 import { useState } from "react";
-import { ArrowLeft, Heart, Globe, ExternalLink, Mail, Star, Shield, Wifi, Users, Code, Sparkles, MessageCircle, Zap, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
+import { ArrowLeft, Heart, Globe, ExternalLink, Mail, Star, Shield, Wifi, Users, Code, Sparkles, MessageCircle, Zap, ChevronDown, ChevronUp, Copy, Check, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import logo from "@/assets/sea-u-logo.png";
 import { toast } from "@/hooks/use-toast";
+import CommunityGallery from "@/components/about/CommunityGallery";
+import InteractiveTimeline from "@/components/about/InteractiveTimeline";
 
 const TEAM = [
   { name: "Lemuel", role: "Founder & Lead Developer", country: "🇵🇭", avatar: "👨‍💻", bio: "Visionary behind SEA-U. Passionate about connecting Southeast Asian communities through technology.", socials: "@lemuel.dev" },
   { name: "Lane", role: "Co-Founder & Creative Director", country: "🇵🇭", avatar: "🎨", bio: "Designs every pixel with love. Believes great apps should feel like home.", socials: "@lane.creates" },
 ];
 
-const MILESTONES = [
-  { version: "v1.0.0", date: "Feb 2026", title: "Launch Day 🚀", desc: "SEA-U goes live! Offline chat via hotspot & Bluetooth." },
-  { version: "v0.9.0", date: "Jan 2026", title: "Beta Release 🧪", desc: "500+ beta testers across 6 SEA countries." },
-  { version: "v0.5.0", date: "Nov 2025", title: "Alpha Build 🔨", desc: "Core messaging engine, sticker system, and UID networking." },
-  { version: "v0.1.0", date: "Aug 2025", title: "The Idea 💡", desc: "Lemma Lane dreams up offline-first chat for SEA." },
-];
+const MILESTONES_REMOVED = true; // moved to InteractiveTimeline component
 
 const FAQ = [
   { q: "Is SEA-U really free?", a: "Yes! 100% free, no ads, no subscriptions, no hidden fees. Forever." },
@@ -107,6 +104,13 @@ export default function AboutPage() {
               {copiedUid ? <Check className="w-4 h-4 text-mint" /> : <Copy className="w-4 h-4" />}
               Share
             </button>
+            <button
+              onClick={() => window.dispatchEvent(new Event("sea-u-restart-tour"))}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-muted text-muted-foreground text-xs font-display font-bold hover:bg-muted/80 transition-all active:scale-95"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Tour
+            </button>
           </div>
         </div>
 
@@ -183,30 +187,11 @@ export default function AboutPage() {
           ))}
         </div>
 
-        {/* Timeline / Milestones */}
-        <p className="font-display font-bold text-xs text-muted-foreground uppercase tracking-wider px-1">
-          <Zap className="w-3 h-3 inline mr-1" />Journey
-        </p>
-        <div className="relative pl-6 space-y-4">
-          <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-border rounded-full" />
-          {MILESTONES.map((m, i) => (
-            <div
-              key={i}
-              className="relative"
-              style={{ animation: `pop-in 0.3s ease-out ${i * 0.1}s both` }}
-            >
-              <div className="absolute -left-[13px] top-1 w-3 h-3 rounded-full bg-primary border-2 border-card" />
-              <div className="bg-card border border-border rounded-2xl p-3 cute-shadow ml-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="bg-primary/15 text-primary font-mono font-bold text-[10px] px-2 py-0.5 rounded-full">{m.version}</span>
-                  <span className="text-[10px] text-muted-foreground">{m.date}</span>
-                </div>
-                <p className="font-display font-bold text-xs text-foreground">{m.title}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{m.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Interactive Timeline */}
+        <InteractiveTimeline />
+
+        {/* Community Gallery */}
+        <CommunityGallery />
 
         {/* FAQ */}
         <p className="font-display font-bold text-xs text-muted-foreground uppercase tracking-wider px-1">
