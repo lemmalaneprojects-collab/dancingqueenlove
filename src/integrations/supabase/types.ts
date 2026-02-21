@@ -14,13 +14,152 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string | null
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string
+          sticker: string | null
+        }
+        Insert: {
+          content?: string | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          sticker?: string | null
+        }
+        Update: {
+          content?: string | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          sticker?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar: string
+          block_strangers: boolean
+          country: string
+          created_at: string
+          display_name: string
+          id: string
+          last_seen: string | null
+          read_receipts: boolean
+          sea_id: string
+          show_in_directory: boolean
+          show_last_seen: boolean
+          show_online: boolean
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar?: string
+          block_strangers?: boolean
+          country?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          last_seen?: string | null
+          read_receipts?: boolean
+          sea_id?: string
+          show_in_directory?: boolean
+          show_last_seen?: boolean
+          show_online?: boolean
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar?: string
+          block_strangers?: boolean
+          country?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          last_seen?: string | null
+          read_receipts?: boolean
+          sea_id?: string
+          show_in_directory?: boolean
+          show_last_seen?: boolean
+          show_online?: boolean
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_sea_id: { Args: never; Returns: string }
+      is_conversation_participant: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
