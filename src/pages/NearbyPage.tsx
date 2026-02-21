@@ -1,27 +1,13 @@
 import { Wifi, Bluetooth, Globe, RefreshCw, Search, Copy, Check } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MY_PROFILE } from "@/data/chatData";
-import { useSettings } from "@/contexts/SettingsContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { findOrCreateConversation } from "@/hooks/useConversations";
+import type { Tables } from "@/integrations/supabase/types";
 
-const NEARBY_DEVICES = [
-  { id: "d1", name: "Aira's iPhone 14", type: "hotspot" as const, signal: "Strong", avatar: "👩" },
-  { id: "d2", name: "Minh's Galaxy S24", type: "bluetooth" as const, signal: "Medium", avatar: "👨" },
-  { id: "d3", name: "Kanya's Pixel 8", type: "hotspot" as const, signal: "Strong", avatar: "👩" },
-];
-
-const GLOBAL_USERS = [
-  { uid: "SEA-112049", name: "Nhi Nguyen", avatar: "👩", country: "Vietnam 🇻🇳", status: "Let's be friends~ 🌸" },
-  { uid: "SEA-339210", name: "Arief Pratama", avatar: "👨", country: "Indonesia 🇮🇩", status: "Gaming & chatting 🎮" },
-  { uid: "SEA-667821", name: "Mei Lin Tan", avatar: "👩", country: "Singapore 🇸🇬", status: "Hello from SG!" },
-  { uid: "SEA-445902", name: "Kanya Siriwat", avatar: "👩", country: "Thailand 🇹🇭", status: "Sawasdee~ 🙏" },
-  { uid: "SEA-998134", name: "Rizal Abidin", avatar: "👨", country: "Malaysia 🇲🇾", status: "Apa khabar! 🌺" },
-  { uid: "SEA-201847", name: "Dara Sokha", avatar: "👩", country: "Cambodia 🇰🇭", status: "Sour sdey! 🌻" },
-  { uid: "SEA-773521", name: "Thuy Le", avatar: "👩", country: "Vietnam 🇻🇳", status: "Coffee lover ☕" },
-  { uid: "SEA-556092", name: "Bagus Wibowo", avatar: "👨", country: "Indonesia 🇮🇩", status: "Exploring SEA 🗺️" },
-];
-
+type Profile = Tables<"profiles">;
 type Tab = "nearby" | "global";
 
 export default function NearbyPage() {
@@ -29,8 +15,10 @@ export default function NearbyPage() {
   const [tab, setTab] = useState<Tab>("nearby");
   const [globalSearch, setGlobalSearch] = useState("");
   const [copied, setCopied] = useState(false);
+  const [globalUsers, setGlobalUsers] = useState<Profile[]>([]);
+  const [loadingGlobal, setLoadingGlobal] = useState(false);
   const navigate = useNavigate();
-  const { profileVisible } = useSettings();
+  const { profile, user } = useAuth();
 
   const handleScan = () => {
     setScanning(true);
@@ -38,17 +26,46 @@ export default function NearbyPage() {
   };
 
   const copyUID = () => {
-    navigator.clipboard.writeText(MY_PROFILE.uid).catch(() => {});
+    if (!profile) return;
+    navigator.clipboard.writeText(profile.sea_id).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const filteredGlobal = GLOBAL_USERS.filter(
+  // Fetch global directory
+  useEffect(() => {
+    if (tab !== "global") return;
+    setLoadingGlobal(true);
+
+    const fetchUsers = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("show_in_directory", true)
+        .neq("user_id", user?.id || "")
+        .limit(50);
+
+      setGlobalUsers(data || []);
+      setLoadingGlobal(false);
+    };
+
+    fetchUsers();
+  }, [tab, user]);
+
+  const filteredGlobal = globalUsers.filter(
     (u) =>
-      u.name.toLowerCase().includes(globalSearch.toLowerCase()) ||
-      u.uid.toLowerCase().includes(globalSearch.toLowerCase()) ||
+      u.display_name.toLowerCase().includes(globalSearch.toLowerCase()) ||
+      u.sea_id.toLowerCase().includes(globalSearch.toLowerCase()) ||
       u.country.toLowerCase().includes(globalSearch.toLowerCase())
   );
+
+  const handleChatUser = async (otherUserId: string) => {
+    if (!user) return;
+    try {
+      const convId = await findOrCreateConversation(user.id, otherUserId);
+      navigate(`/chat/${convId}`);
+    } catch { /* ignore */ }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -112,61 +129,43 @@ export default function NearbyPage() {
           </div>
 
           <div className="px-4">
-            <h2 className="font-display font-bold text-sm text-foreground mb-3">Devices Found</h2>
-            <div className="space-y-2">
-              {NEARBY_DEVICES.map((device, i) => (
-                <div
-                  key={device.id}
-                  className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3 cute-shadow"
-                  style={{ animation: `pop-in 0.3s ease-out ${i * 0.1}s both` }}
-                >
-                  <div className="w-10 h-10 rounded-full bg-lavender flex items-center justify-center text-xl">
-                    {device.avatar}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-display font-bold text-sm text-foreground">{device.name}</h3>
-                    <div className="flex items-center gap-1">
-                      {device.type === "bluetooth" ? (
-                        <Bluetooth className="w-3 h-3 text-baby-blue" />
-                      ) : (
-                        <Wifi className="w-3 h-3 text-mint" />
-                      )}
-                      <span className="text-[10px] text-muted-foreground">{device.signal} signal</span>
-                    </div>
-                  </div>
-                  <button className="px-4 py-1.5 rounded-xl bg-primary/10 text-primary font-display font-bold text-xs hover:bg-primary/20 transition-colors">
-                    Connect
-                  </button>
-                </div>
-              ))}
+            <div className="bg-muted/40 rounded-2xl p-6 text-center">
+              <p className="text-3xl mb-2">📡</p>
+              <h3 className="font-display font-bold text-sm text-foreground mb-1">Native Scanning Required</h3>
+              <p className="text-[10px] text-muted-foreground">
+                Bluetooth & WiFi Direct scanning requires the native app (Capacitor).
+                Export this project and build with Capacitor to enable real device scanning.
+              </p>
             </div>
           </div>
         </>
       ) : (
         <>
           {/* Your ID card */}
-          <div className="px-4 pt-4 pb-2">
-            <div className="bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/15 rounded-2xl p-4 cute-shadow">
-              <p className="text-[10px] font-display font-semibold text-muted-foreground uppercase tracking-wider mb-1">Your SEA-U ID</p>
-              <div className="flex items-center justify-between">
-                <span className="font-mono font-extrabold text-lg text-primary tracking-widest">{MY_PROFILE.uid}</span>
-                <button
-                  onClick={copyUID}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary/10 text-primary font-display font-bold text-[10px] hover:bg-primary/20 transition-all active:scale-95"
-                >
-                  {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                  {copied ? "Copied!" : "Copy"}
-                </button>
+          {profile && (
+            <div className="px-4 pt-4 pb-2">
+              <div className="bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/15 rounded-2xl p-4 cute-shadow">
+                <p className="text-[10px] font-display font-semibold text-muted-foreground uppercase tracking-wider mb-1">Your SEA-U ID</p>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-extrabold text-lg text-primary tracking-widest">{profile.sea_id}</span>
+                  <button
+                    onClick={copyUID}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary/10 text-primary font-display font-bold text-[10px] hover:bg-primary/20 transition-all active:scale-95"
+                  >
+                    {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {profile.show_in_directory
+                    ? "You're visible in the directory 🌏"
+                    : "You're hidden from the directory 🔒"}
+                </p>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                {profileVisible
-                  ? "You're visible in the directory 🌏"
-                  : "You're hidden from the directory 🔒"}
-              </p>
             </div>
-          </div>
+          )}
 
-          {/* Global search */}
+          {/* Search */}
           <div className="px-4 py-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -180,57 +179,53 @@ export default function NearbyPage() {
             </div>
           </div>
 
-          {/* Country flags */}
-          <div className="px-4 py-2">
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {["🌏 All", "🇵🇭", "🇻🇳", "🇮🇩", "🇹🇭", "🇲🇾", "🇰🇭", "🇸🇬", "🇲🇲", "🇱🇦"].map((flag, i) => (
-                <button
-                  key={flag}
-                  className="px-3 py-1.5 rounded-full bg-card border border-border text-sm font-display cute-shadow hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
-                  style={{ animation: `pop-in 0.3s ease-out ${i * 0.04}s both` }}
-                >
-                  {flag}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Global users directory */}
+          {/* Users directory */}
           <div className="px-4 mt-1">
             <h2 className="font-display font-bold text-sm text-foreground mb-3">SEA-U Directory 🌸</h2>
-            <div className="space-y-2">
-              {filteredGlobal.map((user, i) => (
-                <div
-                  key={user.uid}
-                  className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3 cute-shadow"
-                  style={{ animation: `pop-in 0.3s ease-out ${i * 0.08}s both` }}
-                >
-                  <div className="w-11 h-11 rounded-full bg-lavender flex items-center justify-center text-xl">
-                    {user.avatar}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-display font-bold text-sm text-foreground truncate">{user.name}</h3>
-                    <p className="text-[10px] text-muted-foreground truncate">{user.status}</p>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <Globe className="w-2.5 h-2.5 text-primary" />
-                      <span className="text-[9px] text-muted-foreground/70 font-mono">{user.uid}</span>
-                      <span className="text-[9px] text-muted-foreground/50">·</span>
-                      <span className="text-[9px] text-muted-foreground/70">{user.country}</span>
+            {loadingGlobal ? (
+              <div className="flex justify-center py-8">
+                <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredGlobal.map((u, i) => (
+                  <div
+                    key={u.id}
+                    className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3 cute-shadow"
+                    style={{ animation: `pop-in 0.3s ease-out ${i * 0.08}s both` }}
+                  >
+                    <div className="w-11 h-11 rounded-full bg-lavender flex items-center justify-center text-xl">
+                      {u.avatar}
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-display font-bold text-sm text-foreground truncate">{u.display_name}</h3>
+                      <p className="text-[10px] text-muted-foreground truncate">{u.status || "No status"}</p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Globe className="w-2.5 h-2.5 text-primary" />
+                        <span className="text-[9px] text-muted-foreground/70 font-mono">{u.sea_id}</span>
+                        <span className="text-[9px] text-muted-foreground/50">·</span>
+                        <span className="text-[9px] text-muted-foreground/70">{u.country}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleChatUser(u.user_id)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary/10 text-primary font-display font-bold text-[10px] hover:bg-primary/20 transition-colors active:scale-95"
+                    >
+                      <Globe className="w-3 h-3" />
+                      Chat
+                    </button>
                   </div>
-                  <button className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary/10 text-primary font-display font-bold text-[10px] hover:bg-primary/20 transition-colors active:scale-95">
-                    <Globe className="w-3 h-3" />
-                    Chat
-                  </button>
-                </div>
-              ))}
-              {filteredGlobal.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-3xl mb-2">🌏</p>
-                  <p className="text-xs font-display text-muted-foreground">No users found</p>
-                </div>
-              )}
-            </div>
+                ))}
+                {filteredGlobal.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-3xl mb-2">🌏</p>
+                    <p className="text-xs font-display text-muted-foreground">
+                      {globalSearch ? "No users found" : "No users in directory yet"}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </>
       )}
