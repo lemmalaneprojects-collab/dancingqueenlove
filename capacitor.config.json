@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.112f1433fac14993938ec1171fef4e9b",
+  "appName": "sea-u",
+  "webDir": "dist",
+  "server": {
+    "url": "https://112f1433-fac1-4993-938e-c1171fef4e9b.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}

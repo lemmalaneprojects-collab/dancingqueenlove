@@ -1,5 +1,10 @@
 import { useState } from "react";
 import { X, UserPlus, Globe, Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { findOrCreateConversation } from "@/hooks/useConversations";
+import { toast } from "@/hooks/use-toast";
 
 interface AddFriendDialogProps {
   open: boolean;
@@ -9,38 +14,42 @@ interface AddFriendDialogProps {
 export default function AddFriendDialog({ open, onClose }: AddFriendDialogProps) {
   const [uid, setUid] = useState("");
   const [status, setStatus] = useState<"idle" | "searching" | "found" | "not-found">("idle");
-  const [foundUser, setFoundUser] = useState<{ name: string; avatar: string; country: string } | null>(null);
+  const [foundUser, setFoundUser] = useState<{ user_id: string; display_name: string; avatar: string; country: string; sea_id: string } | null>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!uid.trim()) return;
     setStatus("searching");
-    // Simulated search
-    setTimeout(() => {
-      const knownUsers: Record<string, { name: string; avatar: string; country: string }> = {
-        "SEA-290178": { name: "Aira 🇵🇭", avatar: "🧑‍🦱", country: "Philippines" },
-        "SEA-537261": { name: "Minh 🇻🇳", avatar: "👩", country: "Vietnam" },
-        "SEA-418930": { name: "Putri 🇮🇩", avatar: "👧", country: "Indonesia" },
-        "SEA-602847": { name: "Somchai 🇹🇭", avatar: "🧑", country: "Thailand" },
-        "SEA-753194": { name: "Lina 🇲🇾", avatar: "👩‍🦰", country: "Malaysia" },
-        "SEA-884562": { name: "Dara 🇰🇭", avatar: "👱‍♀️", country: "Cambodia" },
-      };
-      const found = knownUsers[uid.trim().toUpperCase()];
-      if (found) {
-        setFoundUser(found);
-        setStatus("found");
-      } else {
-        setFoundUser(null);
-        setStatus("not-found");
-      }
-    }, 1200);
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("user_id, display_name, avatar, country, sea_id")
+      .ilike("sea_id", uid.trim().toUpperCase())
+      .single();
+
+    if (data && data.user_id !== user?.id) {
+      setFoundUser(data);
+      setStatus("found");
+    } else {
+      setFoundUser(null);
+      setStatus("not-found");
+    }
   };
 
-  const handleAdd = () => {
-    // In a real app, this would add the friend
-    onClose();
-    setUid("");
-    setStatus("idle");
-    setFoundUser(null);
+  const handleChat = async () => {
+    if (!foundUser || !user) return;
+
+    try {
+      const conversationId = await findOrCreateConversation(user.id, foundUser.user_id);
+      onClose();
+      setUid("");
+      setStatus("idle");
+      setFoundUser(null);
+      navigate(`/chat/${conversationId}`);
+    } catch {
+      toast({ title: "Failed to start chat", variant: "destructive" });
+    }
   };
 
   const handleClose = () => {
@@ -59,11 +68,10 @@ export default function AddFriendDialog({ open, onClose }: AddFriendDialogProps)
         className="relative w-full max-w-sm mx-4 mb-4 bg-card rounded-3xl border border-border cute-shadow overflow-hidden"
         style={{ animation: "slide-up 0.3s ease-out" }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div className="flex items-center gap-2">
             <Globe className="w-5 h-5 text-primary" />
-            <h2 className="font-display font-extrabold text-base text-foreground">Add by SEA-U ID</h2>
+            <h2 className="font-display font-extrabold text-base text-foreground">Find by SEA-U ID</h2>
           </div>
           <button onClick={handleClose} className="p-1.5 rounded-xl hover:bg-muted transition-colors">
             <X className="w-4 h-4 text-muted-foreground" />
@@ -71,20 +79,16 @@ export default function AddFriendDialog({ open, onClose }: AddFriendDialogProps)
         </div>
 
         <p className="px-5 text-xs text-muted-foreground font-body mb-4">
-          Enter a friend's unique SEA-U ID to chat across any distance — no hotspot or bluetooth needed! 🌏
+          Enter a friend's unique SEA-U ID to start chatting 🌏
         </p>
 
-        {/* Search input */}
         <div className="px-5 mb-4">
           <div className="flex gap-2">
             <input
               type="text"
               placeholder="e.g. SEA-290178"
               value={uid}
-              onChange={(e) => {
-                setUid(e.target.value);
-                setStatus("idle");
-              }}
+              onChange={(e) => { setUid(e.target.value); setStatus("idle"); }}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               className="flex-1 px-4 py-2.5 rounded-2xl bg-muted/60 text-sm font-mono font-bold text-foreground placeholder:text-muted-foreground placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-primary/30 tracking-wider"
             />
@@ -98,7 +102,6 @@ export default function AddFriendDialog({ open, onClose }: AddFriendDialogProps)
           </div>
         </div>
 
-        {/* Results */}
         <div className="px-5 pb-5 min-h-[80px]">
           {status === "searching" && (
             <div className="flex flex-col items-center py-4 gap-2">
@@ -112,15 +115,15 @@ export default function AddFriendDialog({ open, onClose }: AddFriendDialogProps)
                 {foundUser.avatar}
               </div>
               <div className="flex-1">
-                <h3 className="font-display font-bold text-sm text-foreground">{foundUser.name}</h3>
-                <p className="text-[10px] text-muted-foreground">{foundUser.country} · {uid.toUpperCase()}</p>
+                <h3 className="font-display font-bold text-sm text-foreground">{foundUser.display_name}</h3>
+                <p className="text-[10px] text-muted-foreground">{foundUser.country} · {foundUser.sea_id}</p>
               </div>
               <button
-                onClick={handleAdd}
+                onClick={handleChat}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground font-display font-bold text-xs hover:opacity-90 active:scale-95 transition-all"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                Add
+                Chat
               </button>
             </div>
           )}

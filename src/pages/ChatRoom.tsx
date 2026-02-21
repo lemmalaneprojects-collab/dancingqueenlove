@@ -1,50 +1,74 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Smile, Send, Bluetooth, Wifi, Globe, MoreVertical } from "lucide-react";
-import { DEMO_CONTACTS, DEMO_MESSAGES, type Message } from "@/data/chatData";
+import { ArrowLeft, Smile, Send, Globe, MoreVertical } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMessages } from "@/hooks/useMessages";
 import { useSettings } from "@/contexts/SettingsContext";
+import { supabase } from "@/integrations/supabase/client";
 import MessageBubble from "@/components/MessageBubble";
 import StickerPicker from "@/components/StickerPicker";
 
 export default function ChatRoom() {
-  const { id } = useParams<{ id: string }>();
+  const { id: conversationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const contact = DEMO_CONTACTS.find((c) => c.id === id);
-  const { showOnline, showLastSeen, chatHistoryCleared } = useSettings();
-  const [messages, setMessages] = useState<Message[]>(
-    chatHistoryCleared ? [] : (DEMO_MESSAGES[id || "1"] || [])
-  );
+  const { user } = useAuth();
+  const { messages, loading, sendMessage } = useMessages(conversationId);
+  const { showOnline, showLastSeen, readReceipts, bubbleStyle } = useSettings();
   const [input, setInput] = useState("");
   const [showStickers, setShowStickers] = useState(false);
+  const [otherUser, setOtherUser] = useState<{
+    display_name: string;
+    avatar: string;
+    sea_id: string;
+    show_online: boolean;
+    last_seen: string | null;
+  } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  if (!contact) {
-    navigate("/");
-    return null;
-  }
+  // Fetch other user info
+  useEffect(() => {
+    if (!conversationId || !user) return;
 
-  const sendMessage = (text?: string, sticker?: string) => {
-    if (!text && !sticker) return;
-    const newMsg: Message = {
-      id: `m${Date.now()}`,
-      senderId: "me",
-      text,
-      sticker,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      isMe: true,
+    const fetchOtherUser = async () => {
+      const { data: participants } = await supabase
+        .from("conversation_participants")
+        .select("user_id")
+        .eq("conversation_id", conversationId)
+        .neq("user_id", user.id);
+
+      if (participants && participants[0]) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name, avatar, sea_id, show_online, last_seen")
+          .eq("user_id", participants[0].user_id)
+          .single();
+
+        if (profile) setOtherUser(profile);
+      }
     };
-    setMessages((prev) => [...prev, newMsg]);
-    setInput("");
+
+    fetchOtherUser();
+  }, [conversationId, user]);
+
+  const handleSend = async () => {
+    if (input.trim()) {
+      await sendMessage(input.trim());
+      setInput("");
+    }
+  };
+
+  const handleStickerSend = async (emoji: string) => {
+    await sendMessage(undefined, emoji);
     setShowStickers(false);
   };
 
-  const handleSend = () => {
-    if (input.trim()) sendMessage(input.trim());
-  };
+  const isOnline = otherUser?.show_online && otherUser?.last_seen
+    ? (Date.now() - new Date(otherUser.last_seen).getTime()) < 5 * 60 * 1000
+    : false;
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -55,30 +79,20 @@ export default function ChatRoom() {
         </button>
         <div className="relative">
           <div className="w-10 h-10 rounded-full bg-lavender flex items-center justify-center text-xl">
-            {contact.avatar}
+            {otherUser?.avatar || "🧑"}
           </div>
-          {showOnline && contact.online && (
+          {showOnline && isOnline && (
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-mint border-2 border-card" />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="font-display font-bold text-sm text-foreground truncate">{contact.name}</h2>
+          <h2 className="font-display font-bold text-sm text-foreground truncate">{otherUser?.display_name || "Loading..."}</h2>
           <div className="flex items-center gap-1">
-            {contact.connectionType === "bluetooth" ? (
-              <Bluetooth className="w-3 h-3 text-baby-blue" />
-            ) : contact.connectionType === "uid" ? (
-              <Globe className="w-3 h-3 text-primary" />
-            ) : (
-              <Wifi className="w-3 h-3 text-mint" />
-            )}
+            <Globe className="w-3 h-3 text-primary" />
             <span className="text-[10px] text-muted-foreground">
-              {showOnline && contact.online
-                ? "Connected"
-                : showLastSeen
-                ? "Last seen " + contact.lastTime + " ago"
-                : ""}
+              {showOnline && isOnline ? "Online" : showLastSeen && otherUser?.last_seen ? "Last seen recently" : ""}
             </span>
-            <span className="text-[10px] text-muted-foreground/60 font-mono ml-1">{contact.uid}</span>
+            <span className="text-[10px] text-muted-foreground/60 font-mono ml-1">{otherUser?.sea_id}</span>
           </div>
         </div>
         <button className="p-2 rounded-xl hover:bg-muted transition-colors">
@@ -88,37 +102,43 @@ export default function ChatRoom() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-        {/* Connection banner */}
         <div className="flex justify-center mb-4">
           <div className="bg-muted/60 rounded-full px-4 py-1.5 text-[10px] font-display font-semibold text-muted-foreground flex items-center gap-1.5">
-            {contact.connectionType === "bluetooth" ? (
-              <><Bluetooth className="w-3 h-3 text-baby-blue" /> Connected via Bluetooth</>
-            ) : contact.connectionType === "uid" ? (
-              <><Globe className="w-3 h-3 text-primary" /> Connected via SEA-U ID 🌏</>
-            ) : (
-              <><Wifi className="w-3 h-3 text-mint" /> Connected via Hotspot</>
-            )}
+            <Globe className="w-3 h-3 text-primary" /> Connected via SEA-U ID 🌏
           </div>
         </div>
 
-        {chatHistoryCleared && messages.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-3xl mb-2">🗑️</p>
-            <p className="text-xs font-display text-muted-foreground">Chat history was cleared</p>
-            <p className="text-[10px] text-muted-foreground mt-1">Send a message to start a new conversation!</p>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
+        ) : messages.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-3xl mb-2">👋</p>
+            <p className="text-xs font-display text-muted-foreground">Say hello!</p>
+          </div>
+        ) : (
+          messages.map((msg) => (
+            <MessageBubble
+              key={msg.id}
+              message={{
+                id: msg.id,
+                senderId: msg.sender_id,
+                text: msg.content || undefined,
+                sticker: msg.sticker || undefined,
+                timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                isMe: msg.sender_id === user?.id,
+              }}
+            />
+          ))
         )}
-
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
-        ))}
         <div ref={bottomRef} />
       </div>
 
       {/* Sticker Picker */}
       {showStickers && (
         <StickerPicker
-          onSelect={(emoji) => sendMessage(undefined, emoji)}
+          onSelect={handleStickerSend}
           onClose={() => setShowStickers(false)}
         />
       )}
