@@ -35,12 +35,24 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AuthRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+  if (user) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 const AppRoutes = () => (
   <BrowserRouter>
-    <OnboardingTour />
     <Routes>
-      <Route path="/auth" element={<AuthPage />} />
-      <Route path="/" element={<ProtectedRoute><ChatsPage /></ProtectedRoute>} />
+      <Route path="/auth" element={<AuthRoute><AuthPage /></AuthRoute>} />
+      <Route path="/" element={<ProtectedRoute><OnboardingTour /><ChatsPage /></ProtectedRoute>} />
       <Route path="/chat/:id" element={<ProtectedRoute><ChatRoom /></ProtectedRoute>} />
       <Route path="/nearby" element={<ProtectedRoute><NearbyPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
