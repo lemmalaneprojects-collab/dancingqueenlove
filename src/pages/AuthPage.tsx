@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import logo from "@/assets/sea-u-logo.png";
 import { toast } from "@/hooks/use-toast";
+import { AlertTriangle, Eye, EyeOff } from "lucide-react";
 
 const COUNTRIES = [
   "Philippines 🇵🇭", "Vietnam 🇻🇳", "Indonesia 🇮🇩", "Thailand 🇹🇭",
@@ -11,38 +12,66 @@ const COUNTRIES = [
 
 const AVATARS = ["🧑", "👩", "👨", "🧑‍💻", "👩‍💻", "👨‍💻", "🧑‍🎨", "👩‍🎤", "🧑‍🚀", "🦊", "🐱", "🐰"];
 
+const ERROR_MESSAGES: Record<string, string> = {
+  "Invalid login credentials": "Wrong email or password. Please try again! 🔑",
+  "Email not confirmed": "Please check your email and click the confirmation link first 📧",
+  "User already registered": "This email is already registered. Try logging in instead! 😊",
+  "Password should be at least 6 characters": "Password needs at least 6 characters 🔒",
+  "Unable to validate email address: invalid format": "Please enter a valid email address 📨",
+};
+
+function friendlyError(message: string): string {
+  for (const [key, friendly] of Object.entries(ERROR_MESSAGES)) {
+    if (message.toLowerCase().includes(key.toLowerCase())) return friendly;
+  }
+  return message;
+}
+
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [country, setCountry] = useState(COUNTRIES[0]);
   const [avatar, setAvatar] = useState("🧑");
   const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Show error from URL params (e.g., from auth error page redirect)
+  const urlError = searchParams.get("error");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setErrorMsg(null);
 
     if (mode === "signup") {
       if (!displayName.trim()) {
-        toast({ title: "Please enter a display name", variant: "destructive" });
+        setErrorMsg("Please enter a display name 😊");
+        setSubmitting(false);
+        return;
+      }
+      if (password.length < 6) {
+        setErrorMsg("Password needs at least 6 characters 🔒");
         setSubmitting(false);
         return;
       }
       const { error } = await signUp(email, password, displayName.trim(), country, avatar);
       if (error) {
-        toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+        setErrorMsg(friendlyError(error.message));
       } else {
-        toast({ title: "Check your email! 📧", description: "We sent a confirmation link. Please verify your email to log in." });
+        toast({ title: "Account created! 🎉", description: "You can now log in with your credentials." });
         setMode("login");
+        setPassword("");
       }
     } else {
       const { error } = await signIn(email, password);
       if (error) {
-        toast({ title: "Login failed", description: error.message, variant: "destructive" });
+        setErrorMsg(friendlyError(error.message));
       }
     }
     setSubmitting(false);
@@ -58,10 +87,26 @@ export default function AuthPage() {
           <p className="text-sm text-muted-foreground font-body mt-1">Connect across Southeast Asia 🌏</p>
         </div>
 
+        {/* URL error banner */}
+        {urlError && (
+          <div className="mb-4 p-3 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+            <p className="text-xs font-body text-destructive">{decodeURIComponent(urlError)}</p>
+          </div>
+        )}
+
+        {/* Inline error */}
+        {errorMsg && (
+          <div className="mb-4 p-3 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-start gap-2" style={{ animation: "pop-in 0.2s ease-out" }}>
+            <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+            <p className="text-xs font-body text-destructive">{errorMsg}</p>
+          </div>
+        )}
+
         {/* Mode toggle */}
         <div className="flex gap-2 mb-6">
           <button
-            onClick={() => setMode("login")}
+            onClick={() => { setMode("login"); setErrorMsg(null); }}
             className={`flex-1 py-2.5 rounded-2xl font-display font-bold text-sm transition-all ${
               mode === "login" ? "bg-primary text-primary-foreground" : "bg-muted/60 text-muted-foreground"
             }`}
@@ -69,7 +114,7 @@ export default function AuthPage() {
             Log In
           </button>
           <button
-            onClick={() => setMode("signup")}
+            onClick={() => { setMode("signup"); setErrorMsg(null); }}
             className={`flex-1 py-2.5 rounded-2xl font-display font-bold text-sm transition-all ${
               mode === "signup" ? "bg-primary text-primary-foreground" : "bg-muted/60 text-muted-foreground"
             }`}
@@ -129,15 +174,24 @@ export default function AuthPage() {
             className="w-full px-4 py-3 rounded-2xl bg-muted/60 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className="w-full px-4 py-3 rounded-2xl bg-muted/60 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full px-4 py-3 pr-12 rounded-2xl bg-muted/60 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
 
           <button
             type="submit"
@@ -147,6 +201,12 @@ export default function AuthPage() {
             {submitting ? "Please wait..." : mode === "login" ? "Log In ✨" : "Create Account 🌸"}
           </button>
         </form>
+
+        {mode === "login" && (
+          <p className="text-[10px] text-muted-foreground text-center mt-4">
+            Forgot your password? Contact support 💌
+          </p>
+        )}
 
         {mode === "signup" && (
           <p className="text-[10px] text-muted-foreground text-center mt-4">

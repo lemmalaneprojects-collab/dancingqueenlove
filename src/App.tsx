@@ -14,6 +14,8 @@ import AppearancePage from "./pages/AppearancePage";
 import PrivacyPage from "./pages/PrivacyPage";
 import AboutPage from "./pages/AboutPage";
 import AuthPage from "./pages/AuthPage";
+import StudyTimerPage from "./pages/StudyTimerPage";
+import AuthErrorPage from "./pages/AuthErrorPage";
 import NotFound from "./pages/NotFound";
 import OnboardingTour from "./components/about/OnboardingTour";
 
@@ -52,9 +54,11 @@ const AppRoutes = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/auth" element={<AuthRoute><AuthPage /></AuthRoute>} />
+      <Route path="/auth/error" element={<AuthErrorPage />} />
       <Route path="/" element={<ProtectedRoute><OnboardingTour /><ChatsPage /></ProtectedRoute>} />
       <Route path="/chat/:id" element={<ProtectedRoute><ChatRoom /></ProtectedRoute>} />
       <Route path="/nearby" element={<ProtectedRoute><NearbyPage /></ProtectedRoute>} />
+      <Route path="/study" element={<ProtectedRoute><StudyTimerPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/settings/appearance" element={<ProtectedRoute><AppearancePage /></ProtectedRoute>} />
