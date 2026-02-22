@@ -1,10 +1,11 @@
-import { MessageCircle, User, Settings, Wifi } from "lucide-react";
+import { MessageCircle, User, Settings, Wifi, BookOpen } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 
 export default function BottomNav() {
   const navItems = [
     { to: "/", icon: MessageCircle, label: "Chats" },
     { to: "/nearby", icon: Wifi, label: "Nearby" },
+    { to: "/study", icon: BookOpen, label: "Study" },
     { to: "/profile", icon: User, label: "Profile" },
     { to: "/settings", icon: Settings, label: "Settings" },
   ];
