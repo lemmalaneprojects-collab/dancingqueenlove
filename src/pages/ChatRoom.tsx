@@ -7,12 +7,13 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { supabase } from "@/integrations/supabase/client";
 import MessageBubble from "@/components/MessageBubble";
 import StickerPicker from "@/components/StickerPicker";
+import TypingIndicator from "@/components/TypingIndicator";
 
 export default function ChatRoom() {
   const { id: conversationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { messages, loading, sendMessage } = useMessages(conversationId);
+  const { messages, loading, sendMessage, otherTyping, setTyping, markAsRead } = useMessages(conversationId);
   const { showOnline, showLastSeen, readReceipts, bubbleStyle } = useSettings();
   const [input, setInput] = useState("");
   const [showStickers, setShowStickers] = useState(false);
@@ -27,7 +28,14 @@ export default function ChatRoom() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, otherTyping]);
+
+  // Mark messages as read when viewing
+  useEffect(() => {
+    if (messages.length > 0) {
+      markAsRead();
+    }
+  }, [messages, markAsRead]);
 
   // Fetch other user info
   useEffect(() => {
@@ -56,9 +64,15 @@ export default function ChatRoom() {
 
   const handleSend = async () => {
     if (input.trim()) {
+      setTyping(false);
       await sendMessage(input.trim());
       setInput("");
     }
+  };
+
+  const handleInputChange = (value: string) => {
+    setInput(value);
+    setTyping(value.length > 0);
   };
 
   const handleStickerSend = async (emoji: string) => {
@@ -90,7 +104,7 @@ export default function ChatRoom() {
           <div className="flex items-center gap-1">
             <Globe className="w-3 h-3 text-primary" />
             <span className="text-[10px] text-muted-foreground">
-              {showOnline && isOnline ? "Online" : showLastSeen && otherUser?.last_seen ? "Last seen recently" : ""}
+              {otherTyping ? "typing..." : showOnline && isOnline ? "Online" : showLastSeen && otherUser?.last_seen ? "Last seen recently" : ""}
             </span>
             <span className="text-[10px] text-muted-foreground/60 font-mono ml-1">{otherUser?.sea_id}</span>
           </div>
@@ -128,10 +142,12 @@ export default function ChatRoom() {
                 sticker: msg.sticker || undefined,
                 timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
                 isMe: msg.sender_id === user?.id,
+                readAt: msg.read_at,
               }}
             />
           ))
         )}
+        {otherTyping && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>
 
@@ -158,7 +174,7 @@ export default function ChatRoom() {
             type="text"
             placeholder="Type a message..."
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             className="flex-1 px-4 py-2.5 rounded-2xl bg-muted/60 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           />
