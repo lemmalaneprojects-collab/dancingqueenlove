@@ -1,8 +1,17 @@
-import type { Message } from "@/data/chatData";
 import { useSettings } from "@/contexts/SettingsContext";
 
+interface MessageProps {
+  id: string;
+  senderId: string;
+  text?: string;
+  sticker?: string;
+  timestamp: string;
+  isMe: boolean;
+  readAt?: string | null;
+}
+
 interface MessageBubbleProps {
-  message: Message;
+  message: MessageProps;
 }
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
@@ -21,6 +30,10 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
     }
   };
 
+  const readIcon = message.isMe && readReceipts
+    ? message.readAt ? " ✓✓" : " ✓"
+    : "";
+
   if (isSticker) {
     return (
       <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2`}>
@@ -30,7 +43,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
           </span>
           <span className="text-[10px] text-muted-foreground mt-1">
             {message.timestamp}
-            {message.isMe && readReceipts && " ✓✓"}
+            {readIcon && <span className={message.readAt ? "text-primary" : ""}>{readIcon}</span>}
           </span>
         </div>
       </div>
@@ -50,7 +63,11 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
         <p className="text-sm font-body leading-relaxed">{message.text}</p>
         <p className={`text-[10px] mt-1 ${message.isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
           {message.timestamp}
-          {message.isMe && readReceipts && " ✓✓"}
+          {readIcon && (
+            <span className={message.readAt ? (message.isMe ? " text-primary-foreground" : " text-primary") : ""}>
+              {readIcon}
+            </span>
+          )}
         </p>
       </div>
     </div>

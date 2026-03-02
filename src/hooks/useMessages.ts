@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
@@ -9,6 +9,9 @@ export function useMessages(conversationId: string | undefined) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [otherTyping, setOtherTyping] = useState(false);
+  const typingTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     if (!conversationId || !user) return;
@@ -26,7 +29,7 @@ export function useMessages(conversationId: string | undefined) {
 
     fetchMessages();
 
-    // Realtime subscription
+    // Realtime subscription for new messages + updates (read receipts)
     const channel = supabase
       .channel(`messages-${conversationId}`)
       .on(
@@ -41,9 +44,43 @@ export function useMessages(conversationId: string | undefined) {
           setMessages((prev) => [...prev, payload.new as Message]);
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === (payload.new as Message).id ? (payload.new as Message) : m))
+          );
+        }
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Presence channel for typing indicators
+    const presenceChannel = supabase.channel(`typing-${conversationId}`, {
+      config: { presence: { key: user.id } },
+    });
+
+    presenceChannel
+      .on("presence", { event: "sync" }, () => {
+        const state = presenceChannel.presenceState();
+        const someoneElseTyping = Object.keys(state).some(
+          (key) => key !== user.id && (state[key] as any)?.[0]?.typing
+        );
+        setOtherTyping(someoneElseTyping);
+      })
+      .subscribe();
+
+    channelRef.current = presenceChannel;
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(presenceChannel);
+    };
   }, [conversationId, user]);
 
   const sendMessage = async (content?: string, sticker?: string) => {
@@ -57,5 +94,31 @@ export function useMessages(conversationId: string | undefined) {
     });
   };
 
-  return { messages, loading, sendMessage };
+  const setTyping = useCallback(
+    (isTyping: boolean) => {
+      if (!channelRef.current) return;
+      channelRef.current.track({ typing: isTyping });
+
+      if (isTyping) {
+        if (typingTimeout.current) clearTimeout(typingTimeout.current);
+        typingTimeout.current = setTimeout(() => {
+          channelRef.current?.track({ typing: false });
+        }, 3000);
+      }
+    },
+    []
+  );
+
+  const markAsRead = useCallback(async () => {
+    if (!user || !conversationId) return;
+    // Mark all unread messages from the other person as read
+    await supabase
+      .from("messages")
+      .update({ read_at: new Date().toISOString() })
+      .eq("conversation_id", conversationId)
+      .neq("sender_id", user.id)
+      .is("read_at", null);
+  }, [user, conversationId]);
+
+  return { messages, loading, sendMessage, otherTyping, setTyping, markAsRead };
 }
