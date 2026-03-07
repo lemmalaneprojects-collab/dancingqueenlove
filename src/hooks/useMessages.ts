@@ -120,5 +120,11 @@ export function useMessages(conversationId: string | undefined) {
       .is("read_at", null);
   }, [user, conversationId]);
 
-  return { messages, loading, sendMessage, otherTyping, setTyping, markAsRead };
+  const deleteMessage = useCallback(async (messageId: string) => {
+    if (!user) return;
+    await supabase.from("messages").delete().eq("id", messageId).eq("sender_id", user.id);
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+  }, [user]);
+
+  return { messages, loading, sendMessage, otherTyping, setTyping, markAsRead, deleteMessage };
 }
