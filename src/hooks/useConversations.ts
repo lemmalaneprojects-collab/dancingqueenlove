@@ -78,6 +78,14 @@ export function useConversations() {
         .limit(1)
         .single();
 
+      // Count unread messages (from others, not yet read)
+      const { count: unreadCount } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("conversation_id", convId)
+        .neq("sender_id", user.id)
+        .is("read_at", null);
+
       results.push({
         id: convId,
         otherUser: {
@@ -91,7 +99,7 @@ export function useConversations() {
         },
         lastMessage: lastMsg?.content || (lastMsg?.sticker ? `Sticker ${lastMsg.sticker}` : null),
         lastMessageTime: lastMsg?.created_at || null,
-        unreadCount: 0,
+        unreadCount: unreadCount || 0,
       });
     }
 

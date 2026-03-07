@@ -58,6 +58,18 @@ export function useMessages(conversationId: string | undefined) {
           );
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          setMessages((prev) => prev.filter((m) => m.id !== (payload.old as any).id));
+        }
+      )
       .subscribe();
 
     // Presence channel for typing indicators
@@ -120,5 +132,11 @@ export function useMessages(conversationId: string | undefined) {
       .is("read_at", null);
   }, [user, conversationId]);
 
-  return { messages, loading, sendMessage, otherTyping, setTyping, markAsRead };
+  const deleteMessage = useCallback(async (messageId: string) => {
+    if (!user) return;
+    await supabase.from("messages").delete().eq("id", messageId).eq("sender_id", user.id);
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+  }, [user]);
+
+  return { messages, loading, sendMessage, otherTyping, setTyping, markAsRead, deleteMessage };
 }
