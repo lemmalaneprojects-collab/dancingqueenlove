@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Smile, Send, Globe, MoreVertical } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessages } from "@/hooks/useMessages";
+import { useReactions } from "@/hooks/useReactions";
 import { useSettings } from "@/contexts/SettingsContext";
 import { supabase } from "@/integrations/supabase/client";
 import MessageBubble from "@/components/MessageBubble";
@@ -14,7 +15,8 @@ export default function ChatRoom() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { messages, loading, sendMessage, otherTyping, setTyping, markAsRead, deleteMessage } = useMessages(conversationId);
-  const { showOnline, showLastSeen, readReceipts, bubbleStyle } = useSettings();
+  const { getReactionsForMessage, toggleReaction } = useReactions(conversationId);
+  const { showOnline, showLastSeen } = useSettings();
   const [input, setInput] = useState("");
   const [showStickers, setShowStickers] = useState(false);
   const [otherUser, setOtherUser] = useState<{
@@ -30,17 +32,12 @@ export default function ChatRoom() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, otherTyping]);
 
-  // Mark messages as read when viewing
   useEffect(() => {
-    if (messages.length > 0) {
-      markAsRead();
-    }
+    if (messages.length > 0) markAsRead();
   }, [messages, markAsRead]);
 
-  // Fetch other user info
   useEffect(() => {
     if (!conversationId || !user) return;
-
     const fetchOtherUser = async () => {
       const { data: participants } = await supabase
         .from("conversation_participants")
@@ -54,11 +51,9 @@ export default function ChatRoom() {
           .select("display_name, avatar, sea_id, show_online, last_seen")
           .eq("user_id", participants[0].user_id)
           .single();
-
         if (profile) setOtherUser(profile);
       }
     };
-
     fetchOtherUser();
   }, [conversationId, user]);
 
@@ -86,7 +81,6 @@ export default function ChatRoom() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-lg border-b border-border px-3 py-3 flex items-center gap-3">
         <button onClick={() => navigate("/")} className="p-2 rounded-xl hover:bg-muted transition-colors">
           <ArrowLeft className="w-5 h-5 text-foreground" />
@@ -114,7 +108,6 @@ export default function ChatRoom() {
         </button>
       </header>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
         <div className="flex justify-center mb-4">
           <div className="bg-muted/60 rounded-full px-4 py-1.5 text-[10px] font-display font-semibold text-muted-foreground flex items-center gap-1.5">
@@ -145,6 +138,8 @@ export default function ChatRoom() {
                 readAt: msg.read_at,
               }}
               onDelete={deleteMessage}
+              reactions={getReactionsForMessage(msg.id)}
+              onReact={toggleReaction}
             />
           ))
         )}
@@ -152,15 +147,10 @@ export default function ChatRoom() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Sticker Picker */}
       {showStickers && (
-        <StickerPicker
-          onSelect={handleStickerSend}
-          onClose={() => setShowStickers(false)}
-        />
+        <StickerPicker onSelect={handleStickerSend} onClose={() => setShowStickers(false)} />
       )}
 
-      {/* Input */}
       <div className="bg-card/90 backdrop-blur-lg border-t border-border px-3 py-3">
         <div className="flex items-center gap-2">
           <button
