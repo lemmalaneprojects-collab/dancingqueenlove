@@ -13,7 +13,7 @@ export default function ChatRoom() {
   const { id: conversationId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { messages, loading, sendMessage, otherTyping, setTyping, markAsRead } = useMessages(conversationId);
+  const { messages, loading, sendMessage, otherTyping, setTyping, markAsRead, deleteMessage } = useMessages(conversationId);
   const { showOnline, showLastSeen, readReceipts, bubbleStyle } = useSettings();
   const [input, setInput] = useState("");
   const [showStickers, setShowStickers] = useState(false);
