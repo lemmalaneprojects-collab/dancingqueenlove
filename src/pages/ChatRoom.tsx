@@ -144,6 +144,7 @@ export default function ChatRoom() {
                 isMe: msg.sender_id === user?.id,
                 readAt: msg.read_at,
               }}
+              onDelete={deleteMessage}
             />
           ))
         )}
