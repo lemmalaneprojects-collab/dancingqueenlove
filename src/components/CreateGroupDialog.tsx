@@ -57,24 +57,23 @@ export default function CreateGroupDialog({ open, onClose }: CreateGroupDialogPr
     if (!user || selected.length < 2 || !groupName.trim()) return;
     setCreating(true);
     try {
-      const { data: conv } = await supabase
+      const convId = crypto.randomUUID();
+      const { error } = await supabase
         .from("conversations")
-        .insert({ name: groupName.trim(), is_group: true })
-        .select("id")
-        .single();
+        .insert({ id: convId, name: groupName.trim(), is_group: true });
 
-      if (!conv) throw new Error("Failed to create group");
+      if (error) throw new Error("Failed to create group");
 
       // Add creator first
       await supabase.from("conversation_participants").insert({
-        conversation_id: conv.id,
+        conversation_id: convId,
         user_id: user.id,
       });
 
       // Add members one by one
       for (const memberId of selected) {
         await supabase.from("conversation_participants").insert({
-          conversation_id: conv.id,
+          conversation_id: convId,
           user_id: memberId,
         });
       }
