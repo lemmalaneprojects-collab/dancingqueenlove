@@ -51,7 +51,9 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-const AppRoutes = () => (
+const AppRoutes = () => {
+  useNotifications();
+  return (
   <BrowserRouter>
     <Routes>
       <Route path="/auth" element={<AuthRoute><AuthPage /></AuthRoute>} />
