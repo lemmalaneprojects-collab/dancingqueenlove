@@ -186,5 +186,5 @@ export async function findOrCreateConversation(currentUserId: string, otherUserI
     conversation_id: convId, user_id: otherUserId,
   });
 
-  return conv.id;
+  return convId;
 }
