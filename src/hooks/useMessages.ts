@@ -95,14 +95,17 @@ export function useMessages(conversationId: string | undefined) {
     };
   }, [conversationId, user]);
 
-  const sendMessage = async (content?: string, sticker?: string) => {
-    if (!user || !conversationId || (!content && !sticker)) return;
+  const sendMessage = async (content?: string, sticker?: string, file?: { url: string; name: string; type: string }) => {
+    if (!user || !conversationId || (!content && !sticker && !file)) return;
 
     await supabase.from("messages").insert({
       conversation_id: conversationId,
       sender_id: user.id,
       content: content || null,
       sticker: sticker || null,
+      file_url: file?.url || null,
+      file_name: file?.name || null,
+      file_type: file?.type || null,
     });
   };
 

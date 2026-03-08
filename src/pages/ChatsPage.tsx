@@ -1,25 +1,27 @@
 import { useState } from "react";
-import { Search, Plus, Globe, Wifi } from "lucide-react";
+import { Search, Plus, Globe, Users } from "lucide-react";
 import { useConversations } from "@/hooks/useConversations";
-import { useAuth } from "@/contexts/AuthContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import AddFriendDialog from "@/components/AddFriendDialog";
+import CreateGroupDialog from "@/components/CreateGroupDialog";
 import logo from "@/assets/sea-u-logo.png";
 import { formatDistanceToNow } from "date-fns";
 
 export default function ChatsPage() {
   const [search, setSearch] = useState("");
   const [showAddFriend, setShowAddFriend] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
   const { conversations, loading } = useConversations();
   const { showOnline, showLastSeen } = useSettings();
   const navigate = useNavigate();
 
-  const filtered = conversations.filter((c) =>
-    c.otherUser.display_name.toLowerCase().includes(search.toLowerCase()) ||
-    c.otherUser.sea_id.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = conversations.filter((c) => {
+    const q = search.toLowerCase();
+    if (c.isGroup) return (c.groupName || "").toLowerCase().includes(q);
+    return c.otherUser.display_name.toLowerCase().includes(q) || c.otherUser.sea_id.toLowerCase().includes(q);
+  });
 
   const timeAgo = (dateStr: string | null) => {
     if (!dateStr) return "";
@@ -41,12 +43,20 @@ export default function ChatsPage() {
               <p className="text-[10px] text-muted-foreground font-body">{conversations.length} conversation{conversations.length !== 1 ? "s" : ""}</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowAddFriend(true)}
-            className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowCreateGroup(true)}
+              className="w-10 h-10 rounded-2xl bg-accent/30 flex items-center justify-center text-accent-foreground hover:bg-accent/50 transition-colors"
+            >
+              <Users className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setShowAddFriend(true)}
+              className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <div className="relative">
@@ -90,26 +100,47 @@ export default function ChatsPage() {
               style={{ animation: `pop-in 0.3s ease-out ${i * 0.05}s both` }}
             >
               <div className="relative">
-                <div className="w-12 h-12 rounded-full bg-lavender flex items-center justify-center text-2xl cute-shadow">
-                  {conv.otherUser.avatar}
-                </div>
-                {showOnline && conv.otherUser.show_online && conv.otherUser.last_seen && (
-                  (() => {
-                    const lastSeen = new Date(conv.otherUser.last_seen);
-                    const isOnline = (Date.now() - lastSeen.getTime()) < 5 * 60 * 1000;
-                    return isOnline ? (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-mint border-2 border-card" />
-                    ) : null;
-                  })()
+                {conv.isGroup ? (
+                  <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center cute-shadow">
+                    <div className="flex -space-x-1.5">
+                      {conv.memberAvatars.slice(0, 3).map((av, j) => (
+                        <span key={j} className="text-lg">{av}</span>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-12 h-12 rounded-full bg-lavender flex items-center justify-center text-2xl cute-shadow">
+                      {conv.otherUser.avatar}
+                    </div>
+                    {showOnline && conv.otherUser.show_online && conv.otherUser.last_seen && (
+                      (() => {
+                        const isOnline = (Date.now() - new Date(conv.otherUser.last_seen).getTime()) < 5 * 60 * 1000;
+                        return isOnline ? (
+                          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-mint border-2 border-card" />
+                        ) : null;
+                      })()
+                    )}
+                  </>
                 )}
               </div>
               <div className="flex-1 min-w-0 text-left">
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-display font-bold text-sm text-foreground truncate">{conv.otherUser.display_name}</h3>
-                  <Globe className="w-3 h-3 text-primary flex-shrink-0" />
+                  <h3 className="font-display font-bold text-sm text-foreground truncate">
+                    {conv.isGroup ? (conv.groupName || "Group Chat") : conv.otherUser.display_name}
+                  </h3>
+                  {conv.isGroup ? (
+                    <Users className="w-3 h-3 text-accent-foreground flex-shrink-0" />
+                  ) : (
+                    <Globe className="w-3 h-3 text-primary flex-shrink-0" />
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-muted-foreground/70 font-mono">{conv.otherUser.sea_id}</span>
+                  {conv.isGroup ? (
+                    <span className="text-[10px] text-muted-foreground/70">{conv.memberCount} members</span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground/70 font-mono">{conv.otherUser.sea_id}</span>
+                  )}
                   <span className="text-[10px] text-muted-foreground">·</span>
                   <p className="text-xs text-muted-foreground truncate">{conv.lastMessage || "No messages yet"}</p>
                 </div>
@@ -130,6 +161,7 @@ export default function ChatsPage() {
       </div>
 
       <AddFriendDialog open={showAddFriend} onClose={() => setShowAddFriend(false)} />
+      <CreateGroupDialog open={showCreateGroup} onClose={() => setShowCreateGroup(false)} />
       <BottomNav />
     </div>
   );
