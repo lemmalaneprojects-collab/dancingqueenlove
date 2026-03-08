@@ -18,6 +18,7 @@ import StudyTimerPage from "./pages/StudyTimerPage";
 import AuthErrorPage from "./pages/AuthErrorPage";
 import NotFound from "./pages/NotFound";
 import OnboardingTour from "./components/about/OnboardingTour";
+import { useNotifications } from "./hooks/useNotifications";
 
 const queryClient = new QueryClient();
 
@@ -50,7 +51,9 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-const AppRoutes = () => (
+const AppRoutes = () => {
+  useNotifications();
+  return (
   <BrowserRouter>
     <Routes>
       <Route path="/auth" element={<AuthRoute><AuthPage /></AuthRoute>} />
@@ -67,7 +70,8 @@ const AppRoutes = () => (
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>
-);
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
