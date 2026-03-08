@@ -82,7 +82,7 @@ export default function CreateGroupDialog({ open, onClose }: CreateGroupDialogPr
       setGroupName("");
       setSelected([]);
       setSearch("");
-      navigate(`/chat/${conv.id}`);
+      navigate(`/chat/${convId}`);
     } catch {
       toast({ title: "Failed to create group", variant: "destructive" });
     } finally {
