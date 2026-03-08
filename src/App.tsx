@@ -18,6 +18,7 @@ import StudyTimerPage from "./pages/StudyTimerPage";
 import AuthErrorPage from "./pages/AuthErrorPage";
 import NotFound from "./pages/NotFound";
 import OnboardingTour from "./components/about/OnboardingTour";
+import { useNotifications } from "./hooks/useNotifications";
 
 const queryClient = new QueryClient();
 
