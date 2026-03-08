@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export interface ConversationWithDetails {
   id: string;
+  isGroup: boolean;
+  groupName: string | null;
   otherUser: {
     user_id: string;
     display_name: string;
@@ -13,6 +15,8 @@ export interface ConversationWithDetails {
     show_online: boolean;
     last_seen: string | null;
   };
+  memberCount: number;
+  memberAvatars: string[];
   lastMessage: string | null;
   lastMessageTime: string | null;
   unreadCount: number;
@@ -26,7 +30,6 @@ export function useConversations() {
   const fetchConversations = async () => {
     if (!user) return;
 
-    // Get all conversation IDs for this user
     const { data: participations } = await supabase
       .from("conversation_participants")
       .select("conversation_id")
@@ -40,7 +43,14 @@ export function useConversations() {
 
     const convIds = participations.map((p) => p.conversation_id);
 
-    // Get other participants for each conversation
+    // Get conversation metadata
+    const { data: convData } = await supabase
+      .from("conversations")
+      .select("id, name, is_group")
+      .in("id", convIds);
+
+    const convMap = new Map((convData || []).map((c) => [c.id, c]));
+
     const { data: allParticipants } = await supabase
       .from("conversation_participants")
       .select("conversation_id, user_id")
@@ -55,30 +65,33 @@ export function useConversations() {
 
     const otherUserIds = [...new Set(allParticipants.map((p) => p.user_id))];
 
-    // Get profiles of other users
     const { data: profiles } = await supabase
       .from("profiles")
       .select("*")
       .in("user_id", otherUserIds);
 
-    // Get latest message for each conversation
     const results: ConversationWithDetails[] = [];
     for (const convId of convIds) {
-      const otherParticipant = allParticipants.find((p) => p.conversation_id === convId);
-      if (!otherParticipant) continue;
+      const convMeta = convMap.get(convId);
+      const convParticipants = allParticipants.filter((p) => p.conversation_id === convId);
+      if (convParticipants.length === 0) continue;
 
-      const otherProfile = profiles?.find((p) => p.user_id === otherParticipant.user_id);
+      const firstParticipant = convParticipants[0];
+      const otherProfile = profiles?.find((p) => p.user_id === firstParticipant.user_id);
       if (!otherProfile) continue;
+
+      const memberAvatars = convParticipants
+        .map((p) => profiles?.find((pr) => pr.user_id === p.user_id)?.avatar || "🧑")
+        .slice(0, 3);
 
       const { data: lastMsg } = await supabase
         .from("messages")
-        .select("content, sticker, created_at")
+        .select("content, sticker, created_at, file_name")
         .eq("conversation_id", convId)
         .order("created_at", { ascending: false })
         .limit(1)
         .single();
 
-      // Count unread messages (from others, not yet read)
       const { count: unreadCount } = await supabase
         .from("messages")
         .select("id", { count: "exact", head: true })
@@ -86,8 +99,14 @@ export function useConversations() {
         .neq("sender_id", user.id)
         .is("read_at", null);
 
+      let lastMessage = lastMsg?.content || null;
+      if (!lastMessage && lastMsg?.sticker) lastMessage = `Sticker ${lastMsg.sticker}`;
+      if (!lastMessage && (lastMsg as any)?.file_name) lastMessage = `📎 ${(lastMsg as any).file_name}`;
+
       results.push({
         id: convId,
+        isGroup: convMeta?.is_group || false,
+        groupName: convMeta?.name || null,
         otherUser: {
           user_id: otherProfile.user_id,
           display_name: otherProfile.display_name,
@@ -97,13 +116,14 @@ export function useConversations() {
           show_online: otherProfile.show_online,
           last_seen: otherProfile.last_seen,
         },
-        lastMessage: lastMsg?.content || (lastMsg?.sticker ? `Sticker ${lastMsg.sticker}` : null),
+        memberCount: convParticipants.length + 1,
+        memberAvatars,
+        lastMessage,
         lastMessageTime: lastMsg?.created_at || null,
         unreadCount: unreadCount || 0,
       });
     }
 
-    // Sort by last message time
     results.sort((a, b) => {
       if (!a.lastMessageTime) return 1;
       if (!b.lastMessageTime) return -1;
@@ -118,17 +138,14 @@ export function useConversations() {
     fetchConversations();
   }, [user]);
 
-  // Listen for new messages to refresh
   useEffect(() => {
     if (!user) return;
-
     const channel = supabase
       .channel("conversations-refresh")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
         fetchConversations();
       })
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
@@ -136,7 +153,6 @@ export function useConversations() {
 }
 
 export async function findOrCreateConversation(currentUserId: string, otherUserId: string): Promise<string> {
-  // Check if a conversation already exists between these two users
   const { data: myConvs } = await supabase
     .from("conversation_participants")
     .select("conversation_id")
@@ -155,7 +171,6 @@ export async function findOrCreateConversation(currentUserId: string, otherUserI
     }
   }
 
-  // Create new conversation
   const { data: conv } = await supabase
     .from("conversations")
     .insert({})
@@ -164,7 +179,6 @@ export async function findOrCreateConversation(currentUserId: string, otherUserI
 
   if (!conv) throw new Error("Failed to create conversation");
 
-  // Add participants one at a time to avoid RLS batch evaluation issues
   await supabase.from("conversation_participants").insert({
     conversation_id: conv.id, user_id: currentUserId,
   });

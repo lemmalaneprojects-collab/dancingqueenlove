@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Trash2, SmilePlus } from "lucide-react";
+import { Trash2, SmilePlus, FileText, Download } from "lucide-react";
 import type { ReactionGroup } from "@/hooks/useReactions";
 
 interface MessageProps {
@@ -11,6 +11,9 @@ interface MessageProps {
   timestamp: string;
   isMe: boolean;
   readAt?: string | null;
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileType?: string | null;
 }
 
 interface MessageBubbleProps {
@@ -26,7 +29,9 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
   const { bubbleStyle, readReceipts } = useSettings();
   const [showActions, setShowActions] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
-  const isSticker = !!message.sticker && !message.text;
+  const isSticker = !!message.sticker && !message.text && !message.fileUrl;
+  const isImage = message.fileType?.startsWith("image/");
+  const isFile = !!message.fileUrl && !isImage;
 
   const getBubbleRadius = (isMe: boolean) => {
     switch (bubbleStyle) {
@@ -127,6 +132,48 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
     );
   };
 
+  const TimestampLine = () => (
+    <p className={`text-[10px] mt-1 ${message.isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+      {message.timestamp}
+      {readIcon && (
+        <span className={message.readAt ? (message.isMe ? " text-primary-foreground" : " text-primary") : ""}>
+          {readIcon}
+        </span>
+      )}
+    </p>
+  );
+
+  const FileAttachment = () => {
+    if (!message.fileUrl) return null;
+
+    if (isImage) {
+      return (
+        <img
+          src={message.fileUrl}
+          alt={message.fileName || "Image"}
+          className="rounded-xl max-w-full max-h-60 object-cover mb-1"
+          loading="lazy"
+        />
+      );
+    }
+
+    return (
+      <a
+        href={message.fileUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className={`flex items-center gap-2 px-3 py-2 rounded-xl mb-1 transition-colors ${
+          message.isMe ? "bg-primary-foreground/10 hover:bg-primary-foreground/20" : "bg-muted/60 hover:bg-muted"
+        }`}
+      >
+        <FileText className="w-5 h-5 flex-shrink-0" />
+        <span className="text-xs truncate flex-1">{message.fileName || "File"}</span>
+        <Download className="w-4 h-4 flex-shrink-0 opacity-60" />
+      </a>
+    );
+  };
+
   if (isSticker) {
     return (
       <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2`}>
@@ -159,15 +206,9 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
           }`}
           style={{ animation: "pop-in 0.3s ease-out" }}
         >
-          <p className="text-sm font-body leading-relaxed">{message.text}</p>
-          <p className={`text-[10px] mt-1 ${message.isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-            {message.timestamp}
-            {readIcon && (
-              <span className={message.readAt ? (message.isMe ? " text-primary-foreground" : " text-primary") : ""}>
-                {readIcon}
-              </span>
-            )}
-          </p>
+          <FileAttachment />
+          {message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>}
+          <TimestampLine />
         </div>
         <ReactionBar />
       </div>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Smile, Send, Globe, MoreVertical } from "lucide-react";
+import { ArrowLeft, Smile, Send, Globe, MoreVertical, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessages } from "@/hooks/useMessages";
 import { useReactions } from "@/hooks/useReactions";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import MessageBubble from "@/components/MessageBubble";
 import StickerPicker from "@/components/StickerPicker";
 import TypingIndicator from "@/components/TypingIndicator";
+import FileUploadButton from "@/components/FileUploadButton";
 
 export default function ChatRoom() {
   const { id: conversationId } = useParams<{ id: string }>();
@@ -19,12 +20,10 @@ export default function ChatRoom() {
   const { showOnline, showLastSeen } = useSettings();
   const [input, setInput] = useState("");
   const [showStickers, setShowStickers] = useState(false);
-  const [otherUser, setOtherUser] = useState<{
-    display_name: string;
-    avatar: string;
-    sea_id: string;
-    show_online: boolean;
-    last_seen: string | null;
+  const [conversationMeta, setConversationMeta] = useState<{
+    isGroup: boolean;
+    name: string | null;
+    members: Array<{ user_id: string; display_name: string; avatar: string; sea_id: string; show_online: boolean; last_seen: string | null }>;
   } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -38,23 +37,36 @@ export default function ChatRoom() {
 
   useEffect(() => {
     if (!conversationId || !user) return;
-    const fetchOtherUser = async () => {
+    const fetch = async () => {
+      // Get conversation details
+      const { data: conv } = await supabase
+        .from("conversations")
+        .select("name, is_group")
+        .eq("id", conversationId)
+        .single();
+
+      // Get all other participants
       const { data: participants } = await supabase
         .from("conversation_participants")
         .select("user_id")
         .eq("conversation_id", conversationId)
         .neq("user_id", user.id);
 
-      if (participants && participants[0]) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("display_name, avatar, sea_id, show_online, last_seen")
-          .eq("user_id", participants[0].user_id)
-          .single();
-        if (profile) setOtherUser(profile);
-      }
+      if (!participants) return;
+
+      const userIds = participants.map((p) => p.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, avatar, sea_id, show_online, last_seen")
+        .in("user_id", userIds);
+
+      setConversationMeta({
+        isGroup: conv?.is_group || false,
+        name: conv?.name || null,
+        members: (profiles || []) as any,
+      });
     };
-    fetchOtherUser();
+    fetch();
   }, [conversationId, user]);
 
   const handleSend = async () => {
@@ -75,9 +87,28 @@ export default function ChatRoom() {
     setShowStickers(false);
   };
 
-  const isOnline = otherUser?.show_online && otherUser?.last_seen
-    ? (Date.now() - new Date(otherUser.last_seen).getTime()) < 5 * 60 * 1000
+  const handleFileUploaded = async (fileUrl: string, fileName: string, fileType: string) => {
+    await sendMessage(undefined, undefined, { url: fileUrl, name: fileName, type: fileType });
+  };
+
+  const firstMember = conversationMeta?.members[0];
+  const isOnline = firstMember?.show_online && firstMember?.last_seen
+    ? (Date.now() - new Date(firstMember.last_seen).getTime()) < 5 * 60 * 1000
     : false;
+
+  const headerTitle = conversationMeta?.isGroup
+    ? conversationMeta.name || "Group Chat"
+    : firstMember?.display_name || "Loading...";
+
+  const headerSubtitle = () => {
+    if (otherTyping) return "typing...";
+    if (conversationMeta?.isGroup) {
+      return `${(conversationMeta.members.length + 1)} members`;
+    }
+    if (showOnline && isOnline) return "Online";
+    if (showLastSeen && firstMember?.last_seen) return "Last seen recently";
+    return "";
+  };
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -86,21 +117,31 @@ export default function ChatRoom() {
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-lavender flex items-center justify-center text-xl">
-            {otherUser?.avatar || "🧑"}
-          </div>
-          {showOnline && isOnline && (
+          {conversationMeta?.isGroup ? (
+            <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
+              <Users className="w-5 h-5 text-accent-foreground" />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-lavender flex items-center justify-center text-xl">
+              {firstMember?.avatar || "🧑"}
+            </div>
+          )}
+          {!conversationMeta?.isGroup && showOnline && isOnline && (
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-mint border-2 border-card" />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="font-display font-bold text-sm text-foreground truncate">{otherUser?.display_name || "Loading..."}</h2>
+          <h2 className="font-display font-bold text-sm text-foreground truncate">{headerTitle}</h2>
           <div className="flex items-center gap-1">
-            <Globe className="w-3 h-3 text-primary" />
-            <span className="text-[10px] text-muted-foreground">
-              {otherTyping ? "typing..." : showOnline && isOnline ? "Online" : showLastSeen && otherUser?.last_seen ? "Last seen recently" : ""}
-            </span>
-            <span className="text-[10px] text-muted-foreground/60 font-mono ml-1">{otherUser?.sea_id}</span>
+            {conversationMeta?.isGroup ? (
+              <Users className="w-3 h-3 text-primary" />
+            ) : (
+              <Globe className="w-3 h-3 text-primary" />
+            )}
+            <span className="text-[10px] text-muted-foreground">{headerSubtitle()}</span>
+            {!conversationMeta?.isGroup && firstMember && (
+              <span className="text-[10px] text-muted-foreground/60 font-mono ml-1">{firstMember.sea_id}</span>
+            )}
           </div>
         </div>
         <button className="p-2 rounded-xl hover:bg-muted transition-colors">
@@ -111,7 +152,11 @@ export default function ChatRoom() {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
         <div className="flex justify-center mb-4">
           <div className="bg-muted/60 rounded-full px-4 py-1.5 text-[10px] font-display font-semibold text-muted-foreground flex items-center gap-1.5">
-            <Globe className="w-3 h-3 text-primary" /> Connected via SEA-U ID 🌏
+            {conversationMeta?.isGroup ? (
+              <><Users className="w-3 h-3 text-primary" /> Group Chat 👥</>
+            ) : (
+              <><Globe className="w-3 h-3 text-primary" /> Connected via SEA-U ID 🌏</>
+            )}
           </div>
         </div>
 
@@ -136,6 +181,9 @@ export default function ChatRoom() {
                 timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
                 isMe: msg.sender_id === user?.id,
                 readAt: msg.read_at,
+                fileUrl: (msg as any).file_url || undefined,
+                fileName: (msg as any).file_name || undefined,
+                fileType: (msg as any).file_type || undefined,
               }}
               onDelete={deleteMessage}
               reactions={getReactionsForMessage(msg.id)}
@@ -161,6 +209,12 @@ export default function ChatRoom() {
           >
             <Smile className="w-5 h-5" />
           </button>
+          {conversationId && (
+            <FileUploadButton
+              conversationId={conversationId}
+              onUploaded={handleFileUploaded}
+            />
+          )}
           <input
             type="text"
             placeholder="Type a message..."
