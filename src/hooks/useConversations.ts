@@ -171,19 +171,19 @@ export async function findOrCreateConversation(currentUserId: string, otherUserI
     }
   }
 
-  const { data: conv } = await supabase
+  // Generate ID client-side to avoid SELECT-after-INSERT RLS conflict
+  const convId = crypto.randomUUID();
+  const { error } = await supabase
     .from("conversations")
-    .insert({})
-    .select("id")
-    .single();
+    .insert({ id: convId });
 
-  if (!conv) throw new Error("Failed to create conversation");
+  if (error) throw new Error("Failed to create conversation");
 
   await supabase.from("conversation_participants").insert({
-    conversation_id: conv.id, user_id: currentUserId,
+    conversation_id: convId, user_id: currentUserId,
   });
   await supabase.from("conversation_participants").insert({
-    conversation_id: conv.id, user_id: otherUserId,
+    conversation_id: convId, user_id: otherUserId,
   });
 
   return conv.id;
