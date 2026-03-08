@@ -164,11 +164,13 @@ export async function findOrCreateConversation(currentUserId: string, otherUserI
 
   if (!conv) throw new Error("Failed to create conversation");
 
-  // Add both participants
-  await supabase.from("conversation_participants").insert([
-    { conversation_id: conv.id, user_id: currentUserId },
-    { conversation_id: conv.id, user_id: otherUserId },
-  ]);
+  // Add participants one at a time to avoid RLS batch evaluation issues
+  await supabase.from("conversation_participants").insert({
+    conversation_id: conv.id, user_id: currentUserId,
+  });
+  await supabase.from("conversation_participants").insert({
+    conversation_id: conv.id, user_id: otherUserId,
+  });
 
   return conv.id;
 }
