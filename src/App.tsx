@@ -70,7 +70,8 @@ const AppRoutes = () => {
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>
-);
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
