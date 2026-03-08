@@ -47,16 +47,22 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_group: boolean
+          name: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_group?: boolean
+          name?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_group?: boolean
+          name?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -98,6 +104,9 @@ export type Database = {
           content: string | null
           conversation_id: string
           created_at: string
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
           id: string
           read_at: string | null
           sender_id: string
@@ -107,6 +116,9 @@ export type Database = {
           content?: string | null
           conversation_id: string
           created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           read_at?: string | null
           sender_id: string
@@ -116,6 +128,9 @@ export type Database = {
           content?: string | null
           conversation_id?: string
           created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           read_at?: string | null
           sender_id?: string
