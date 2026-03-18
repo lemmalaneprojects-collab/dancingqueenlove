@@ -15,6 +15,9 @@ interface MessageProps {
   fileUrl?: string | null;
   fileName?: string | null;
   fileType?: string | null;
+  senderName?: string;
+  senderAvatar?: string;
+  isGroup?: boolean;
 }
 
 interface MessageBubbleProps {
@@ -189,12 +192,22 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
     );
   };
 
+  const showGroupSender = message.isGroup && !message.isMe;
+
+  const senderLabel = showGroupSender ? (
+    <div className="flex items-center gap-1.5 mb-1">
+      <span className="text-base">{message.senderAvatar || "🧑"}</span>
+      <span className="text-[11px] font-display font-semibold text-muted-foreground">{message.senderName || "User"}</span>
+    </div>
+  ) : null;
+
   if (isSticker) {
     return (
       <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2 ${highlightClass}`}>
         <div className="relative flex flex-col items-center" onClick={handleTap}>
           {renderActions()}
           {renderReactionPicker()}
+          {senderLabel}
           <span className="text-5xl" style={{ animation: "bounce-in 0.4s ease-out" }}>
             {message.sticker}
           </span>
@@ -213,6 +226,7 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
       <div className="relative flex flex-col" onClick={handleTap}>
         {renderActions()}
         {renderReactionPicker()}
+        {senderLabel}
         <div
           className={`max-w-[75%] px-4 py-2.5 ${getBubbleRadius(message.isMe)} ${
             message.isMe
