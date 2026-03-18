@@ -12,6 +12,7 @@ import TypingIndicator from "@/components/TypingIndicator";
 import FileUploadButton from "@/components/FileUploadButton";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import MessageSearch from "@/components/MessageSearch";
+import DateSeparator from "@/components/DateSeparator";
 
 export default function ChatRoom() {
   const { id: conversationId } = useParams<{ id: string }>();
