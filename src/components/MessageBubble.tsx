@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Trash2, SmilePlus, FileText, Download } from "lucide-react";
+import AudioPlayer from "@/components/AudioPlayer";
 import type { ReactionGroup } from "@/hooks/useReactions";
 
 interface MessageProps {
@@ -21,17 +22,19 @@ interface MessageBubbleProps {
   onDelete?: (id: string) => void;
   reactions?: ReactionGroup[];
   onReact?: (messageId: string, emoji: string) => void;
+  highlighted?: boolean;
 }
 
 const QUICK_REACTIONS = ["❤️", "😂", "👍", "😮", "😢", "🔥"];
 
-export default function MessageBubble({ message, onDelete, reactions = [], onReact }: MessageBubbleProps) {
+export default function MessageBubble({ message, onDelete, reactions = [], onReact, highlighted }: MessageBubbleProps) {
   const { bubbleStyle, readReceipts } = useSettings();
   const [showActions, setShowActions] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const isSticker = !!message.sticker && !message.text && !message.fileUrl;
   const isImage = message.fileType?.startsWith("image/");
-  const isFile = !!message.fileUrl && !isImage;
+  const isAudio = message.fileType?.startsWith("audio/");
+  const isFile = !!message.fileUrl && !isImage && !isAudio;
 
   const getBubbleRadius = (isMe: boolean) => {
     switch (bubbleStyle) {
@@ -64,7 +67,11 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
     setShowActions(false);
   };
 
-  const ReactionBar = () => {
+  const highlightClass = highlighted
+    ? "ring-2 ring-primary/50 bg-primary/5 rounded-2xl transition-all duration-300"
+    : "";
+
+  const renderReactions = () => {
     if (reactions.length === 0) return null;
     return (
       <div className={`flex gap-1 mt-1 flex-wrap ${message.isMe ? "justify-end" : "justify-start"}`}>
@@ -87,7 +94,7 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
     );
   };
 
-  const ActionButtons = () => {
+  const renderActions = () => {
     if (!showActions) return null;
     return (
       <div
@@ -112,7 +119,7 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
     );
   };
 
-  const ReactionPicker = () => {
+  const renderReactionPicker = () => {
     if (!showReactionPicker) return null;
     return (
       <div
@@ -132,7 +139,7 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
     );
   };
 
-  const TimestampLine = () => (
+  const renderTimestamp = () => (
     <p className={`text-[10px] mt-1 ${message.isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
       {message.timestamp}
       {readIcon && (
@@ -143,7 +150,7 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
     </p>
   );
 
-  const FileAttachment = () => {
+  const renderFile = () => {
     if (!message.fileUrl) return null;
 
     if (isImage) {
@@ -154,6 +161,14 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
           className="rounded-xl max-w-full max-h-60 object-cover mb-1"
           loading="lazy"
         />
+      );
+    }
+
+    if (isAudio) {
+      return (
+        <div className="mb-1">
+          <AudioPlayer src={message.fileUrl} isMe={message.isMe} />
+        </div>
       );
     }
 
@@ -176,10 +191,10 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
 
   if (isSticker) {
     return (
-      <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2`}>
+      <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2 ${highlightClass}`}>
         <div className="relative flex flex-col items-center" onClick={handleTap}>
-          <ActionButtons />
-          <ReactionPicker />
+          {renderActions()}
+          {renderReactionPicker()}
           <span className="text-5xl" style={{ animation: "bounce-in 0.4s ease-out" }}>
             {message.sticker}
           </span>
@@ -187,17 +202,17 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
             {message.timestamp}
             {readIcon && <span className={message.readAt ? "text-primary" : ""}>{readIcon}</span>}
           </span>
-          <ReactionBar />
+          {renderReactions()}
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2`}>
+    <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2 ${highlightClass}`}>
       <div className="relative flex flex-col" onClick={handleTap}>
-        <ActionButtons />
-        <ReactionPicker />
+        {renderActions()}
+        {renderReactionPicker()}
         <div
           className={`max-w-[75%] px-4 py-2.5 ${getBubbleRadius(message.isMe)} ${
             message.isMe
@@ -206,11 +221,11 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
           }`}
           style={{ animation: "pop-in 0.3s ease-out" }}
         >
-          <FileAttachment />
+          {renderFile()}
           {message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>}
-          <TimestampLine />
+          {renderTimestamp()}
         </div>
-        <ReactionBar />
+        {renderReactions()}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Smile, Send, Globe, MoreVertical, Users } from "lucide-react";
+import { ArrowLeft, Smile, Send, Globe, Search, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessages } from "@/hooks/useMessages";
 import { useReactions } from "@/hooks/useReactions";
@@ -10,6 +10,8 @@ import MessageBubble from "@/components/MessageBubble";
 import StickerPicker from "@/components/StickerPicker";
 import TypingIndicator from "@/components/TypingIndicator";
 import FileUploadButton from "@/components/FileUploadButton";
+import VoiceRecorder from "@/components/VoiceRecorder";
+import MessageSearch from "@/components/MessageSearch";
 
 export default function ChatRoom() {
   const { id: conversationId } = useParams<{ id: string }>();
@@ -20,12 +22,15 @@ export default function ChatRoom() {
   const { showOnline, showLastSeen } = useSettings();
   const [input, setInput] = useState("");
   const [showStickers, setShowStickers] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [conversationMeta, setConversationMeta] = useState<{
     isGroup: boolean;
     name: string | null;
     members: Array<{ user_id: string; display_name: string; avatar: string; sea_id: string; show_online: boolean; last_seen: string | null }>;
   } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -35,17 +40,23 @@ export default function ChatRoom() {
     if (messages.length > 0) markAsRead();
   }, [messages, markAsRead]);
 
+  // Scroll to highlighted message
+  useEffect(() => {
+    if (highlightedMessageId) {
+      const el = messageRefs.current.get(highlightedMessageId);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightedMessageId]);
+
   useEffect(() => {
     if (!conversationId || !user) return;
     const fetch = async () => {
-      // Get conversation details
       const { data: conv } = await supabase
         .from("conversations")
         .select("name, is_group")
         .eq("id", conversationId)
         .single();
 
-      // Get all other participants
       const { data: participants } = await supabase
         .from("conversation_participants")
         .select("user_id")
@@ -144,10 +155,18 @@ export default function ChatRoom() {
             )}
           </div>
         </div>
-        <button className="p-2 rounded-xl hover:bg-muted transition-colors">
-          <MoreVertical className="w-5 h-5 text-muted-foreground" />
+        <button onClick={() => setShowSearch(!showSearch)} className="p-2 rounded-xl hover:bg-muted transition-colors">
+          <Search className="w-5 h-5 text-muted-foreground" />
         </button>
       </header>
+
+      {showSearch && (
+        <MessageSearch
+          messages={messages}
+          onHighlight={setHighlightedMessageId}
+          onClose={() => { setShowSearch(false); setHighlightedMessageId(null); }}
+        />
+      )}
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
         <div className="flex justify-center mb-4">
@@ -171,24 +190,29 @@ export default function ChatRoom() {
           </div>
         ) : (
           messages.map((msg) => (
-            <MessageBubble
+            <div
               key={msg.id}
-              message={{
-                id: msg.id,
-                senderId: msg.sender_id,
-                text: msg.content || undefined,
-                sticker: msg.sticker || undefined,
-                timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                isMe: msg.sender_id === user?.id,
-                readAt: msg.read_at,
-                fileUrl: (msg as any).file_url || undefined,
-                fileName: (msg as any).file_name || undefined,
-                fileType: (msg as any).file_type || undefined,
-              }}
-              onDelete={deleteMessage}
-              reactions={getReactionsForMessage(msg.id)}
-              onReact={toggleReaction}
-            />
+              ref={(el) => { if (el) messageRefs.current.set(msg.id, el); }}
+            >
+              <MessageBubble
+                message={{
+                  id: msg.id,
+                  senderId: msg.sender_id,
+                  text: msg.content || undefined,
+                  sticker: msg.sticker || undefined,
+                  timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                  isMe: msg.sender_id === user?.id,
+                  readAt: msg.read_at,
+                  fileUrl: msg.file_url || undefined,
+                  fileName: msg.file_name || undefined,
+                  fileType: msg.file_type || undefined,
+                }}
+                onDelete={deleteMessage}
+                reactions={getReactionsForMessage(msg.id)}
+                onReact={toggleReaction}
+                highlighted={highlightedMessageId === msg.id}
+              />
+            </div>
           ))
         )}
         {otherTyping && <TypingIndicator />}
@@ -210,10 +234,16 @@ export default function ChatRoom() {
             <Smile className="w-5 h-5" />
           </button>
           {conversationId && (
-            <FileUploadButton
-              conversationId={conversationId}
-              onUploaded={handleFileUploaded}
-            />
+            <>
+              <FileUploadButton
+                conversationId={conversationId}
+                onUploaded={handleFileUploaded}
+              />
+              <VoiceRecorder
+                conversationId={conversationId}
+                onRecorded={handleFileUploaded}
+              />
+            </>
           )}
           <input
             type="text"
