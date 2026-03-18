@@ -15,6 +15,9 @@ interface MessageProps {
   fileUrl?: string | null;
   fileName?: string | null;
   fileType?: string | null;
+  senderName?: string;
+  senderAvatar?: string;
+  isGroup?: boolean;
 }
 
 interface MessageBubbleProps {
