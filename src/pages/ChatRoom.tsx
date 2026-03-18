@@ -190,31 +190,44 @@ export default function ChatRoom() {
             <p className="text-xs font-display text-muted-foreground">Say hello!</p>
           </div>
         ) : (
-          messages.map((msg) => (
-            <div
-              key={msg.id}
-              ref={(el) => { if (el) messageRefs.current.set(msg.id, el); }}
-            >
-              <MessageBubble
-                message={{
-                  id: msg.id,
-                  senderId: msg.sender_id,
-                  text: msg.content || undefined,
-                  sticker: msg.sticker || undefined,
-                  timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                  isMe: msg.sender_id === user?.id,
-                  readAt: msg.read_at,
-                  fileUrl: msg.file_url || undefined,
-                  fileName: msg.file_name || undefined,
-                  fileType: msg.file_type || undefined,
-                }}
-                onDelete={deleteMessage}
-                reactions={getReactionsForMessage(msg.id)}
-                onReact={toggleReaction}
-                highlighted={highlightedMessageId === msg.id}
-              />
-            </div>
-          ))
+          messages.map((msg, idx) => {
+            const msgDate = new Date(msg.created_at).toDateString();
+            const prevDate = idx > 0 ? new Date(messages[idx - 1].created_at).toDateString() : null;
+            const showDate = idx === 0 || msgDate !== prevDate;
+
+            const senderProfile = conversationMeta?.isGroup
+              ? conversationMeta.members.find((m) => m.user_id === msg.sender_id)
+              : undefined;
+
+            return (
+              <div key={msg.id}>
+                {showDate && <DateSeparator date={msg.created_at} />}
+                <div ref={(el) => { if (el) messageRefs.current.set(msg.id, el); }}>
+                  <MessageBubble
+                    message={{
+                      id: msg.id,
+                      senderId: msg.sender_id,
+                      text: msg.content || undefined,
+                      sticker: msg.sticker || undefined,
+                      timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                      isMe: msg.sender_id === user?.id,
+                      readAt: msg.read_at,
+                      fileUrl: msg.file_url || undefined,
+                      fileName: msg.file_name || undefined,
+                      fileType: msg.file_type || undefined,
+                      isGroup: conversationMeta?.isGroup,
+                      senderName: senderProfile?.display_name,
+                      senderAvatar: senderProfile?.avatar,
+                    }}
+                    onDelete={deleteMessage}
+                    reactions={getReactionsForMessage(msg.id)}
+                    onReact={toggleReaction}
+                    highlighted={highlightedMessageId === msg.id}
+                  />
+                </div>
+              </div>
+            );
+          })
         )}
         {otherTyping && <TypingIndicator />}
         <div ref={bottomRef} />
