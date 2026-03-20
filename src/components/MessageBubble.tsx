@@ -112,6 +112,12 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
         >
           <SmilePlus className="w-4 h-4 text-muted-foreground" />
         </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowForward(true); setShowActions(false); }}
+          className="p-1.5 rounded-xl hover:bg-muted transition-colors"
+        >
+          <Forward className="w-4 h-4 text-muted-foreground" />
+        </button>
         {message.isMe && onDelete && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(message.id); setShowActions(false); }}
@@ -121,6 +127,20 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
           </button>
         )}
       </div>
+    );
+  };
+
+  const renderForwardDialog = () => {
+    if (!showForward) return null;
+    return (
+      <ForwardMessageDialog
+        messageContent={message.text}
+        messageSticker={message.sticker}
+        fileUrl={message.fileUrl}
+        fileName={message.fileName}
+        fileType={message.fileType}
+        onClose={() => setShowForward(false)}
+      />
     );
   };
 
