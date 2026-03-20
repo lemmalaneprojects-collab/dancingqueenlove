@@ -97,8 +97,19 @@ export default function ChatRoom() {
   };
 
   const handleStickerSend = async (emoji: string) => {
-    await sendMessage(undefined, emoji);
+    await sendMessage(undefined, emoji, undefined, replyTo?.id);
     setShowStickers(false);
+    setReplyTo(null);
+  };
+
+  const handleReply = (msg: any) => {
+    const senderProfile = conversationMeta?.members.find((m) => m.user_id === msg.sender_id);
+    setReplyTo({
+      id: msg.id,
+      content: msg.content || undefined,
+      sticker: msg.sticker || undefined,
+      senderName: msg.sender_id === user?.id ? "You" : senderProfile?.display_name || "User",
+    });
   };
 
   const handleFileUploaded = async (fileUrl: string, fileName: string, fileType: string) => {
