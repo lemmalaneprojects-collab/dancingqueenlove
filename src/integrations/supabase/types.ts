@@ -109,6 +109,7 @@ export type Database = {
           file_url: string | null
           id: string
           read_at: string | null
+          reply_to: string | null
           sender_id: string
           sticker: string | null
         }
@@ -121,6 +122,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           read_at?: string | null
+          reply_to?: string | null
           sender_id: string
           sticker?: string | null
         }
@@ -133,6 +135,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           read_at?: string | null
+          reply_to?: string | null
           sender_id?: string
           sticker?: string | null
         }
@@ -142,6 +145,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
