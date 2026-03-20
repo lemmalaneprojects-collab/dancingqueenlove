@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Smile, Send, Globe, Search, Users } from "lucide-react";
+import { ArrowLeft, Smile, Send, Globe, Search, Users, X, Reply } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessages } from "@/hooks/useMessages";
 import { useReactions } from "@/hooks/useReactions";
@@ -25,6 +25,7 @@ export default function ChatRoom() {
   const [showStickers, setShowStickers] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<{ id: string; content?: string; sticker?: string; senderName?: string } | null>(null);
   const [conversationMeta, setConversationMeta] = useState<{
     isGroup: boolean;
     name: string | null;
@@ -84,8 +85,9 @@ export default function ChatRoom() {
   const handleSend = async () => {
     if (input.trim()) {
       setTyping(false);
-      await sendMessage(input.trim());
+      await sendMessage(input.trim(), undefined, undefined, replyTo?.id);
       setInput("");
+      setReplyTo(null);
     }
   };
 
@@ -95,8 +97,19 @@ export default function ChatRoom() {
   };
 
   const handleStickerSend = async (emoji: string) => {
-    await sendMessage(undefined, emoji);
+    await sendMessage(undefined, emoji, undefined, replyTo?.id);
     setShowStickers(false);
+    setReplyTo(null);
+  };
+
+  const handleReply = (msg: any) => {
+    const senderProfile = conversationMeta?.members.find((m) => m.user_id === msg.sender_id);
+    setReplyTo({
+      id: msg.id,
+      content: msg.content || undefined,
+      sticker: msg.sticker || undefined,
+      senderName: msg.sender_id === user?.id ? "You" : senderProfile?.display_name || "User",
+    });
   };
 
   const handleFileUploaded = async (fileUrl: string, fileName: string, fileType: string) => {
@@ -199,6 +212,9 @@ export default function ChatRoom() {
               ? conversationMeta.members.find((m) => m.user_id === msg.sender_id)
               : undefined;
 
+            const replyMsg = (msg as any).reply_to ? messages.find((m) => m.id === (msg as any).reply_to) : undefined;
+            const replySender = replyMsg ? (replyMsg.sender_id === user?.id ? "You" : conversationMeta?.members.find((m) => m.user_id === replyMsg.sender_id)?.display_name || "User") : undefined;
+
             return (
               <div key={msg.id}>
                 {showDate && <DateSeparator date={msg.created_at} />}
@@ -218,8 +234,14 @@ export default function ChatRoom() {
                       isGroup: conversationMeta?.isGroup,
                       senderName: senderProfile?.display_name,
                       senderAvatar: senderProfile?.avatar,
+                      replyTo: replyMsg ? {
+                        senderName: replySender || "User",
+                        content: replyMsg.content || undefined,
+                        sticker: replyMsg.sticker || undefined,
+                      } : undefined,
                     }}
                     onDelete={deleteMessage}
+                    onReply={() => handleReply(msg)}
                     reactions={getReactionsForMessage(msg.id)}
                     onReact={toggleReaction}
                     highlighted={highlightedMessageId === msg.id}
@@ -237,6 +259,18 @@ export default function ChatRoom() {
         <StickerPicker onSelect={handleStickerSend} onClose={() => setShowStickers(false)} />
       )}
 
+      {replyTo && (
+        <div className="bg-card/90 backdrop-blur-lg border-t border-border px-4 py-2 flex items-center gap-2">
+          <Reply className="w-4 h-4 text-primary flex-shrink-0" />
+          <div className="flex-1 min-w-0 border-l-2 border-primary/40 pl-2">
+            <p className="text-[11px] font-semibold text-primary">{replyTo.senderName}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{replyTo.sticker || replyTo.content || "Attachment"}</p>
+          </div>
+          <button onClick={() => setReplyTo(null)} className="p-1 rounded-lg hover:bg-muted transition-colors">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+      )}
       <div className="bg-card/90 backdrop-blur-lg border-t border-border px-3 py-3">
         <div className="flex items-center gap-2">
           <button

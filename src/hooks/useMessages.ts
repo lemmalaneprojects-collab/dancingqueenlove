@@ -95,7 +95,7 @@ export function useMessages(conversationId: string | undefined) {
     };
   }, [conversationId, user]);
 
-  const sendMessage = async (content?: string, sticker?: string, file?: { url: string; name: string; type: string }) => {
+  const sendMessage = async (content?: string, sticker?: string, file?: { url: string; name: string; type: string }, replyTo?: string) => {
     if (!user || !conversationId || (!content && !sticker && !file)) return;
 
     await supabase.from("messages").insert({
@@ -106,7 +106,8 @@ export function useMessages(conversationId: string | undefined) {
       file_url: file?.url || null,
       file_name: file?.name || null,
       file_type: file?.type || null,
-    });
+      reply_to: replyTo || null,
+    } as any);
   };
 
   const setTyping = useCallback(

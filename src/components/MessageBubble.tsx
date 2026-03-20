@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Trash2, SmilePlus, FileText, Download, Forward } from "lucide-react";
+import { Trash2, SmilePlus, FileText, Download, Forward, Reply } from "lucide-react";
 import ForwardMessageDialog from "@/components/ForwardMessageDialog";
 import AudioPlayer from "@/components/AudioPlayer";
 import type { ReactionGroup } from "@/hooks/useReactions";
@@ -19,11 +19,17 @@ interface MessageProps {
   senderName?: string;
   senderAvatar?: string;
   isGroup?: boolean;
+  replyTo?: {
+    senderName: string;
+    content?: string;
+    sticker?: string;
+  };
 }
 
 interface MessageBubbleProps {
   message: MessageProps;
   onDelete?: (id: string) => void;
+  onReply?: () => void;
   reactions?: ReactionGroup[];
   onReact?: (messageId: string, emoji: string) => void;
   highlighted?: boolean;
@@ -31,7 +37,7 @@ interface MessageBubbleProps {
 
 const QUICK_REACTIONS = ["❤️", "😂", "👍", "😮", "😢", "🔥"];
 
-export default function MessageBubble({ message, onDelete, reactions = [], onReact, highlighted }: MessageBubbleProps) {
+export default function MessageBubble({ message, onDelete, onReply, reactions = [], onReact, highlighted }: MessageBubbleProps) {
   const { bubbleStyle, readReceipts } = useSettings();
   const [showActions, setShowActions] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -111,6 +117,12 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
           className="p-1.5 rounded-xl hover:bg-muted transition-colors"
         >
           <SmilePlus className="w-4 h-4 text-muted-foreground" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onReply?.(); setShowActions(false); }}
+          className="p-1.5 rounded-xl hover:bg-muted transition-colors"
+        >
+          <Reply className="w-4 h-4 text-muted-foreground" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); setShowForward(true); setShowActions(false); }}
@@ -262,6 +274,20 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
             }`}
             style={{ animation: "pop-in 0.3s ease-out" }}
           >
+            {message.replyTo && (
+              <div className={`mb-1.5 px-2.5 py-1.5 rounded-lg border-l-2 ${
+                message.isMe
+                  ? "bg-primary-foreground/10 border-primary-foreground/40"
+                  : "bg-muted/60 border-primary/40"
+              }`}>
+                <p className={`text-[10px] font-semibold ${message.isMe ? "text-primary-foreground/80" : "text-primary"}`}>
+                  {message.replyTo.senderName}
+                </p>
+                <p className={`text-[11px] truncate ${message.isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                  {message.replyTo.sticker || message.replyTo.content || "Attachment"}
+                </p>
+              </div>
+            )}
             {renderFile()}
             {message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>}
             {renderTimestamp()}
