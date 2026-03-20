@@ -259,6 +259,18 @@ export default function ChatRoom() {
         <StickerPicker onSelect={handleStickerSend} onClose={() => setShowStickers(false)} />
       )}
 
+      {replyTo && (
+        <div className="bg-card/90 backdrop-blur-lg border-t border-border px-4 py-2 flex items-center gap-2">
+          <Reply className="w-4 h-4 text-primary flex-shrink-0" />
+          <div className="flex-1 min-w-0 border-l-2 border-primary/40 pl-2">
+            <p className="text-[11px] font-semibold text-primary">{replyTo.senderName}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{replyTo.sticker || replyTo.content || "Attachment"}</p>
+          </div>
+          <button onClick={() => setReplyTo(null)} className="p-1 rounded-lg hover:bg-muted transition-colors">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+      )}
       <div className="bg-card/90 backdrop-blur-lg border-t border-border px-3 py-3">
         <div className="flex items-center gap-2">
           <button
