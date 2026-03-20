@@ -274,6 +274,20 @@ export default function MessageBubble({ message, onDelete, onReply, reactions = 
             }`}
             style={{ animation: "pop-in 0.3s ease-out" }}
           >
+            {message.replyTo && (
+              <div className={`mb-1.5 px-2.5 py-1.5 rounded-lg border-l-2 ${
+                message.isMe
+                  ? "bg-primary-foreground/10 border-primary-foreground/40"
+                  : "bg-muted/60 border-primary/40"
+              }`}>
+                <p className={`text-[10px] font-semibold ${message.isMe ? "text-primary-foreground/80" : "text-primary"}`}>
+                  {message.replyTo.senderName}
+                </p>
+                <p className={`text-[11px] truncate ${message.isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                  {message.replyTo.sticker || message.replyTo.content || "Attachment"}
+                </p>
+              </div>
+            )}
             {renderFile()}
             {message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>}
             {renderTimestamp()}
