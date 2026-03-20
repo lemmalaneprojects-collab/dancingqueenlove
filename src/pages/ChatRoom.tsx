@@ -212,6 +212,9 @@ export default function ChatRoom() {
               ? conversationMeta.members.find((m) => m.user_id === msg.sender_id)
               : undefined;
 
+            const replyMsg = (msg as any).reply_to ? messages.find((m) => m.id === (msg as any).reply_to) : undefined;
+            const replySender = replyMsg ? (replyMsg.sender_id === user?.id ? "You" : conversationMeta?.members.find((m) => m.user_id === replyMsg.sender_id)?.display_name || "User") : undefined;
+
             return (
               <div key={msg.id}>
                 {showDate && <DateSeparator date={msg.created_at} />}
@@ -231,8 +234,14 @@ export default function ChatRoom() {
                       isGroup: conversationMeta?.isGroup,
                       senderName: senderProfile?.display_name,
                       senderAvatar: senderProfile?.avatar,
+                      replyTo: replyMsg ? {
+                        senderName: replySender || "User",
+                        content: replyMsg.content || undefined,
+                        sticker: replyMsg.sticker || undefined,
+                      } : undefined,
                     }}
                     onDelete={deleteMessage}
+                    onReply={() => handleReply(msg)}
                     reactions={getReactionsForMessage(msg.id)}
                     onReact={toggleReaction}
                     highlighted={highlightedMessageId === msg.id}
