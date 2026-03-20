@@ -119,6 +119,12 @@ export default function MessageBubble({ message, onDelete, onReply, reactions = 
           <SmilePlus className="w-4 h-4 text-muted-foreground" />
         </button>
         <button
+          onClick={(e) => { e.stopPropagation(); onReply?.(); setShowActions(false); }}
+          className="p-1.5 rounded-xl hover:bg-muted transition-colors"
+        >
+          <Reply className="w-4 h-4 text-muted-foreground" />
+        </button>
+        <button
           onClick={(e) => { e.stopPropagation(); setShowForward(true); setShowActions(false); }}
           className="p-1.5 rounded-xl hover:bg-muted transition-colors"
         >
