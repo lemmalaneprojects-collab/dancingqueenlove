@@ -37,7 +37,7 @@ interface MessageBubbleProps {
 
 const QUICK_REACTIONS = ["❤️", "😂", "👍", "😮", "😢", "🔥"];
 
-export default function MessageBubble({ message, onDelete, reactions = [], onReact, highlighted }: MessageBubbleProps) {
+export default function MessageBubble({ message, onDelete, onReply, reactions = [], onReact, highlighted }: MessageBubbleProps) {
   const { bubbleStyle, readReceipts } = useSettings();
   const [showActions, setShowActions] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
