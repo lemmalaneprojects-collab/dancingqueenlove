@@ -35,6 +35,7 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
   const { bubbleStyle, readReceipts } = useSettings();
   const [showActions, setShowActions] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [showForward, setShowForward] = useState(false);
   const isSticker = !!message.sticker && !message.text && !message.fileUrl;
   const isImage = message.fileType?.startsWith("image/");
   const isAudio = message.fileType?.startsWith("audio/");
