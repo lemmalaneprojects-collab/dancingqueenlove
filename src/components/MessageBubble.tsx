@@ -247,25 +247,28 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
   }
 
   return (
-    <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2 ${highlightClass}`}>
-      <div className="relative flex flex-col" onClick={handleTap}>
-        {renderActions()}
-        {renderReactionPicker()}
-        {senderLabel}
-        <div
-          className={`max-w-[75%] px-4 py-2.5 ${getBubbleRadius(message.isMe)} ${
-            message.isMe
-              ? "bg-primary text-primary-foreground"
-              : "bg-card border border-border bubble-shadow"
-          }`}
-          style={{ animation: "pop-in 0.3s ease-out" }}
-        >
-          {renderFile()}
-          {message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>}
-          {renderTimestamp()}
+    <>
+      {renderForwardDialog()}
+      <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2 ${highlightClass}`}>
+        <div className="relative flex flex-col" onClick={handleTap}>
+          {renderActions()}
+          {renderReactionPicker()}
+          {senderLabel}
+          <div
+            className={`max-w-[75%] px-4 py-2.5 ${getBubbleRadius(message.isMe)} ${
+              message.isMe
+                ? "bg-primary text-primary-foreground"
+                : "bg-card border border-border bubble-shadow"
+            }`}
+            style={{ animation: "pop-in 0.3s ease-out" }}
+          >
+            {renderFile()}
+            {message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>}
+            {renderTimestamp()}
+          </div>
+          {renderReactions()}
         </div>
-        {renderReactions()}
       </div>
-    </div>
+    </>
   );
 }
