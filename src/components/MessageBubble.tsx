@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Trash2, SmilePlus, FileText, Download, Forward } from "lucide-react";
+import { Trash2, SmilePlus, FileText, Download, Forward, Reply } from "lucide-react";
 import ForwardMessageDialog from "@/components/ForwardMessageDialog";
 import AudioPlayer from "@/components/AudioPlayer";
 import type { ReactionGroup } from "@/hooks/useReactions";
@@ -19,11 +19,17 @@ interface MessageProps {
   senderName?: string;
   senderAvatar?: string;
   isGroup?: boolean;
+  replyTo?: {
+    senderName: string;
+    content?: string;
+    sticker?: string;
+  };
 }
 
 interface MessageBubbleProps {
   message: MessageProps;
   onDelete?: (id: string) => void;
+  onReply?: () => void;
   reactions?: ReactionGroup[];
   onReact?: (messageId: string, emoji: string) => void;
   highlighted?: boolean;
