@@ -85,8 +85,9 @@ export default function ChatRoom() {
   const handleSend = async () => {
     if (input.trim()) {
       setTyping(false);
-      await sendMessage(input.trim());
+      await sendMessage(input.trim(), undefined, undefined, replyTo?.id);
       setInput("");
+      setReplyTo(null);
     }
   };
 
