@@ -225,21 +225,24 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
 
   if (isSticker) {
     return (
-      <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2 ${highlightClass}`}>
-        <div className="relative flex flex-col items-center" onClick={handleTap}>
-          {renderActions()}
-          {renderReactionPicker()}
-          {senderLabel}
-          <span className="text-5xl" style={{ animation: "bounce-in 0.4s ease-out" }}>
-            {message.sticker}
-          </span>
-          <span className="text-[10px] text-muted-foreground mt-1">
-            {message.timestamp}
-            {readIcon && <span className={message.readAt ? "text-primary" : ""}>{readIcon}</span>}
-          </span>
-          {renderReactions()}
+      <>
+        {renderForwardDialog()}
+        <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2 ${highlightClass}`}>
+          <div className="relative flex flex-col items-center" onClick={handleTap}>
+            {renderActions()}
+            {renderReactionPicker()}
+            {senderLabel}
+            <span className="text-5xl" style={{ animation: "bounce-in 0.4s ease-out" }}>
+              {message.sticker}
+            </span>
+            <span className="text-[10px] text-muted-foreground mt-1">
+              {message.timestamp}
+              {readIcon && <span className={message.readAt ? "text-primary" : ""}>{readIcon}</span>}
+            </span>
+            {renderReactions()}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
