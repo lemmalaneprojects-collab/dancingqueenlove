@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Trash2, SmilePlus, FileText, Download } from "lucide-react";
+import { Trash2, SmilePlus, FileText, Download, Forward } from "lucide-react";
+import ForwardMessageDialog from "@/components/ForwardMessageDialog";
 import AudioPlayer from "@/components/AudioPlayer";
 import type { ReactionGroup } from "@/hooks/useReactions";
 
@@ -34,6 +35,7 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
   const { bubbleStyle, readReceipts } = useSettings();
   const [showActions, setShowActions] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [showForward, setShowForward] = useState(false);
   const isSticker = !!message.sticker && !message.text && !message.fileUrl;
   const isImage = message.fileType?.startsWith("image/");
   const isAudio = message.fileType?.startsWith("audio/");
@@ -110,6 +112,12 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
         >
           <SmilePlus className="w-4 h-4 text-muted-foreground" />
         </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowForward(true); setShowActions(false); }}
+          className="p-1.5 rounded-xl hover:bg-muted transition-colors"
+        >
+          <Forward className="w-4 h-4 text-muted-foreground" />
+        </button>
         {message.isMe && onDelete && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(message.id); setShowActions(false); }}
@@ -119,6 +127,20 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
           </button>
         )}
       </div>
+    );
+  };
+
+  const renderForwardDialog = () => {
+    if (!showForward) return null;
+    return (
+      <ForwardMessageDialog
+        messageContent={message.text}
+        messageSticker={message.sticker}
+        fileUrl={message.fileUrl}
+        fileName={message.fileName}
+        fileType={message.fileType}
+        onClose={() => setShowForward(false)}
+      />
     );
   };
 
@@ -203,44 +225,50 @@ export default function MessageBubble({ message, onDelete, reactions = [], onRea
 
   if (isSticker) {
     return (
-      <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2 ${highlightClass}`}>
-        <div className="relative flex flex-col items-center" onClick={handleTap}>
-          {renderActions()}
-          {renderReactionPicker()}
-          {senderLabel}
-          <span className="text-5xl" style={{ animation: "bounce-in 0.4s ease-out" }}>
-            {message.sticker}
-          </span>
-          <span className="text-[10px] text-muted-foreground mt-1">
-            {message.timestamp}
-            {readIcon && <span className={message.readAt ? "text-primary" : ""}>{readIcon}</span>}
-          </span>
-          {renderReactions()}
+      <>
+        {renderForwardDialog()}
+        <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2 ${highlightClass}`}>
+          <div className="relative flex flex-col items-center" onClick={handleTap}>
+            {renderActions()}
+            {renderReactionPicker()}
+            {senderLabel}
+            <span className="text-5xl" style={{ animation: "bounce-in 0.4s ease-out" }}>
+              {message.sticker}
+            </span>
+            <span className="text-[10px] text-muted-foreground mt-1">
+              {message.timestamp}
+              {readIcon && <span className={message.readAt ? "text-primary" : ""}>{readIcon}</span>}
+            </span>
+            {renderReactions()}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2 ${highlightClass}`}>
-      <div className="relative flex flex-col" onClick={handleTap}>
-        {renderActions()}
-        {renderReactionPicker()}
-        {senderLabel}
-        <div
-          className={`max-w-[75%] px-4 py-2.5 ${getBubbleRadius(message.isMe)} ${
-            message.isMe
-              ? "bg-primary text-primary-foreground"
-              : "bg-card border border-border bubble-shadow"
-          }`}
-          style={{ animation: "pop-in 0.3s ease-out" }}
-        >
-          {renderFile()}
-          {message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>}
-          {renderTimestamp()}
+    <>
+      {renderForwardDialog()}
+      <div className={`flex ${message.isMe ? "justify-end" : "justify-start"} mb-2 ${highlightClass}`}>
+        <div className="relative flex flex-col" onClick={handleTap}>
+          {renderActions()}
+          {renderReactionPicker()}
+          {senderLabel}
+          <div
+            className={`max-w-[75%] px-4 py-2.5 ${getBubbleRadius(message.isMe)} ${
+              message.isMe
+                ? "bg-primary text-primary-foreground"
+                : "bg-card border border-border bubble-shadow"
+            }`}
+            style={{ animation: "pop-in 0.3s ease-out" }}
+          >
+            {renderFile()}
+            {message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>}
+            {renderTimestamp()}
+          </div>
+          {renderReactions()}
         </div>
-        {renderReactions()}
       </div>
-    </div>
+    </>
   );
 }
