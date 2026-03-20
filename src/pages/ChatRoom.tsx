@@ -25,6 +25,7 @@ export default function ChatRoom() {
   const [showStickers, setShowStickers] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<{ id: string; content?: string; sticker?: string; senderName?: string } | null>(null);
   const [conversationMeta, setConversationMeta] = useState<{
     isGroup: boolean;
     name: string | null;
