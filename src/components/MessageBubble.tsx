@@ -135,6 +135,14 @@ export default function MessageBubble({ message, onDelete, onReply, onEdit, reac
         >
           <Forward className="w-4 h-4 text-muted-foreground" />
         </button>
+        {message.isMe && message.text && onEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsEditing(true); setEditText(message.text || ""); setShowActions(false); }}
+            className="p-1.5 rounded-xl hover:bg-muted transition-colors"
+          >
+            <Pencil className="w-4 h-4 text-muted-foreground" />
+          </button>
+        )}
         {message.isMe && onDelete && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(message.id); setShowActions(false); }}
@@ -184,6 +192,7 @@ export default function MessageBubble({ message, onDelete, onReply, onEdit, reac
   const renderTimestamp = () => (
     <p className={`text-[10px] mt-1 ${message.isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
       {message.timestamp}
+      {message.editedAt && <span className="italic"> · edited</span>}
       {readIcon && (
         <span className={message.readAt ? (message.isMe ? " text-primary-foreground" : " text-primary") : ""}>
           {readIcon}
@@ -294,7 +303,42 @@ export default function MessageBubble({ message, onDelete, onReply, onEdit, reac
               </div>
             )}
             {renderFile()}
-            {message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>}
+            {isEditing ? (
+              <div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="text"
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      onEdit?.(message.id, editText);
+                      setIsEditing(false);
+                    }
+                    if (e.key === "Escape") setIsEditing(false);
+                  }}
+                  autoFocus
+                  className={`text-sm font-body px-2 py-1 rounded-lg bg-background/20 border border-border focus:outline-none focus:ring-1 focus:ring-primary/40 ${
+                    message.isMe ? "text-primary-foreground" : "text-foreground"
+                  }`}
+                />
+                <div className="flex gap-1 justify-end">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="text-[10px] px-2 py-0.5 rounded-md bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => { onEdit?.(message.id, editText); setIsEditing(false); }}
+                    className="text-[10px] px-2 py-0.5 rounded-md bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            ) : (
+              message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>
+            )}
             {renderTimestamp()}
           </div>
           {renderReactions()}
