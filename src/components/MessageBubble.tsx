@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Trash2, SmilePlus, FileText, Download, Forward, Reply } from "lucide-react";
+import { Trash2, SmilePlus, FileText, Download, Forward, Reply, Pencil } from "lucide-react";
 import ForwardMessageDialog from "@/components/ForwardMessageDialog";
 import AudioPlayer from "@/components/AudioPlayer";
 import type { ReactionGroup } from "@/hooks/useReactions";
@@ -20,6 +20,7 @@ interface MessageProps {
   senderName?: string;
   senderAvatar?: string;
   isGroup?: boolean;
+  editedAt?: string | null;
   replyTo?: {
     senderName: string;
     content?: string;
@@ -31,6 +32,7 @@ interface MessageBubbleProps {
   message: MessageProps;
   onDelete?: (id: string) => void;
   onReply?: () => void;
+  onEdit?: (id: string, newContent: string) => void;
   reactions?: ReactionGroup[];
   onReact?: (messageId: string, emoji: string) => void;
   highlighted?: boolean;
@@ -38,11 +40,13 @@ interface MessageBubbleProps {
 
 const QUICK_REACTIONS = ["❤️", "😂", "👍", "😮", "😢", "🔥"];
 
-export default function MessageBubble({ message, onDelete, onReply, reactions = [], onReact, highlighted }: MessageBubbleProps) {
+export default function MessageBubble({ message, onDelete, onReply, onEdit, reactions = [], onReact, highlighted }: MessageBubbleProps) {
   const { bubbleStyle, readReceipts } = useSettings();
   const [showActions, setShowActions] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showForward, setShowForward] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(message.text || "");
   const isSticker = !!message.sticker && !message.text && !message.fileUrl;
   const isImage = message.fileType?.startsWith("image/");
   const isAudio = message.fileType?.startsWith("audio/");
@@ -131,6 +135,14 @@ export default function MessageBubble({ message, onDelete, onReply, reactions = 
         >
           <Forward className="w-4 h-4 text-muted-foreground" />
         </button>
+        {message.isMe && message.text && onEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsEditing(true); setEditText(message.text || ""); setShowActions(false); }}
+            className="p-1.5 rounded-xl hover:bg-muted transition-colors"
+          >
+            <Pencil className="w-4 h-4 text-muted-foreground" />
+          </button>
+        )}
         {message.isMe && onDelete && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(message.id); setShowActions(false); }}
@@ -180,6 +192,7 @@ export default function MessageBubble({ message, onDelete, onReply, reactions = 
   const renderTimestamp = () => (
     <p className={`text-[10px] mt-1 ${message.isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
       {message.timestamp}
+      {message.editedAt && <span className="italic"> · edited</span>}
       {readIcon && (
         <span className={message.readAt ? (message.isMe ? " text-primary-foreground" : " text-primary") : ""}>
           {readIcon}
@@ -290,7 +303,42 @@ export default function MessageBubble({ message, onDelete, onReply, reactions = 
               </div>
             )}
             {renderFile()}
-            {message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>}
+            {isEditing ? (
+              <div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="text"
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      onEdit?.(message.id, editText);
+                      setIsEditing(false);
+                    }
+                    if (e.key === "Escape") setIsEditing(false);
+                  }}
+                  autoFocus
+                  className={`text-sm font-body px-2 py-1 rounded-lg bg-background/20 border border-border focus:outline-none focus:ring-1 focus:ring-primary/40 ${
+                    message.isMe ? "text-primary-foreground" : "text-foreground"
+                  }`}
+                />
+                <div className="flex gap-1 justify-end">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="text-[10px] px-2 py-0.5 rounded-md bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => { onEdit?.(message.id, editText); setIsEditing(false); }}
+                    className="text-[10px] px-2 py-0.5 rounded-md bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            ) : (
+              message.text && <p className="text-sm font-body leading-relaxed">{message.text}</p>
+            )}
             {renderTimestamp()}
           </div>
           {renderReactions()}

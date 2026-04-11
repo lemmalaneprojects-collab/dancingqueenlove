@@ -142,5 +142,19 @@ export function useMessages(conversationId: string | undefined) {
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
   }, [user]);
 
-  return { messages, loading, sendMessage, otherTyping, setTyping, markAsRead, deleteMessage };
+  const editMessage = useCallback(async (messageId: string, newContent: string) => {
+    if (!user || !newContent.trim()) return;
+    const { error } = await supabase
+      .from("messages")
+      .update({ content: newContent.trim(), edited_at: new Date().toISOString() } as any)
+      .eq("id", messageId)
+      .eq("sender_id", user.id);
+    if (!error) {
+      setMessages((prev) =>
+        prev.map((m) => m.id === messageId ? { ...m, content: newContent.trim(), edited_at: new Date().toISOString() } as any : m)
+      );
+    }
+  }, [user]);
+
+  return { messages, loading, sendMessage, otherTyping, setTyping, markAsRead, deleteMessage, editMessage };
 }
