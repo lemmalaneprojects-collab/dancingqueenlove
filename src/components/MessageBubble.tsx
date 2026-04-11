@@ -4,6 +4,7 @@ import { Trash2, SmilePlus, FileText, Download, Forward, Reply } from "lucide-re
 import ForwardMessageDialog from "@/components/ForwardMessageDialog";
 import AudioPlayer from "@/components/AudioPlayer";
 import type { ReactionGroup } from "@/hooks/useReactions";
+import SeenByIndicator from "@/components/SeenByIndicator";
 
 interface MessageProps {
   id: string;
@@ -293,6 +294,12 @@ export default function MessageBubble({ message, onDelete, onReply, reactions = 
             {renderTimestamp()}
           </div>
           {renderReactions()}
+          <SeenByIndicator
+            messageId={message.id}
+            senderId={message.senderId}
+            isGroup={!!message.isGroup}
+            isMe={message.isMe}
+          />
         </div>
       </div>
     </>
