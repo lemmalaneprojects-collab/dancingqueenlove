@@ -20,6 +20,7 @@ interface MessageProps {
   senderName?: string;
   senderAvatar?: string;
   isGroup?: boolean;
+  editedAt?: string | null;
   replyTo?: {
     senderName: string;
     content?: string;
@@ -31,6 +32,7 @@ interface MessageBubbleProps {
   message: MessageProps;
   onDelete?: (id: string) => void;
   onReply?: () => void;
+  onEdit?: (id: string, newContent: string) => void;
   reactions?: ReactionGroup[];
   onReact?: (messageId: string, emoji: string) => void;
   highlighted?: boolean;
