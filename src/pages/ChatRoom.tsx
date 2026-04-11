@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMessages } from "@/hooks/useMessages";
 import { useReactions } from "@/hooks/useReactions";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useGroupReadReceipts } from "@/hooks/useGroupReadReceipts";
 import { supabase } from "@/integrations/supabase/client";
 import MessageBubble from "@/components/MessageBubble";
 import StickerPicker from "@/components/StickerPicker";
@@ -22,6 +23,8 @@ export default function ChatRoom() {
   const { messages, loading, sendMessage, otherTyping, setTyping, markAsRead, deleteMessage } = useMessages(conversationId);
   const { getReactionsForMessage, toggleReaction } = useReactions(conversationId);
   const { showOnline, showLastSeen } = useSettings();
+  const isGroup = conversationMeta?.isGroup || false;
+  const { markAllRead: markAllGroupRead } = useGroupReadReceipts(conversationId, isGroup);
   const [input, setInput] = useState("");
   const [showStickers, setShowStickers] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
@@ -41,8 +44,14 @@ export default function ChatRoom() {
   }, [messages, otherTyping]);
 
   useEffect(() => {
-    if (messages.length > 0) markAsRead();
-  }, [messages, markAsRead]);
+    if (messages.length > 0) {
+      markAsRead();
+      if (isGroup && user) {
+        const otherMsgs = messages.filter((m) => m.sender_id !== user.id).map((m) => m.id);
+        markAllGroupRead(otherMsgs);
+      }
+    }
+  }, [messages, markAsRead, isGroup, user, markAllGroupRead]);
 
   // Scroll to highlighted message
   useEffect(() => {
