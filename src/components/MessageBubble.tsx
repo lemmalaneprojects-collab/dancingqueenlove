@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Trash2, SmilePlus, FileText, Download, Forward, Reply } from "lucide-react";
+import { Trash2, SmilePlus, FileText, Download, Forward, Reply, Pencil } from "lucide-react";
 import ForwardMessageDialog from "@/components/ForwardMessageDialog";
 import AudioPlayer from "@/components/AudioPlayer";
 import type { ReactionGroup } from "@/hooks/useReactions";
