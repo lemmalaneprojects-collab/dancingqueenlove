@@ -40,11 +40,13 @@ interface MessageBubbleProps {
 
 const QUICK_REACTIONS = ["❤️", "😂", "👍", "😮", "😢", "🔥"];
 
-export default function MessageBubble({ message, onDelete, onReply, reactions = [], onReact, highlighted }: MessageBubbleProps) {
+export default function MessageBubble({ message, onDelete, onReply, onEdit, reactions = [], onReact, highlighted }: MessageBubbleProps) {
   const { bubbleStyle, readReceipts } = useSettings();
   const [showActions, setShowActions] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showForward, setShowForward] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(message.text || "");
   const isSticker = !!message.sticker && !message.text && !message.fileUrl;
   const isImage = message.fileType?.startsWith("image/");
   const isAudio = message.fileType?.startsWith("audio/");
