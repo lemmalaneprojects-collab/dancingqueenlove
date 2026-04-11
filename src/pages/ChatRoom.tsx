@@ -247,6 +247,7 @@ export default function ChatRoom() {
                       fileName: msg.file_name || undefined,
                       fileType: msg.file_type || undefined,
                       isGroup: conversationMeta?.isGroup,
+                      editedAt: (msg as any).edited_at || undefined,
                       senderName: senderProfile?.display_name,
                       senderAvatar: senderProfile?.avatar,
                       replyTo: replyMsg ? {
@@ -256,6 +257,7 @@ export default function ChatRoom() {
                       } : undefined,
                     }}
                     onDelete={deleteMessage}
+                    onEdit={editMessage}
                     onReply={() => handleReply(msg)}
                     reactions={getReactionsForMessage(msg.id)}
                     onReact={toggleReaction}
