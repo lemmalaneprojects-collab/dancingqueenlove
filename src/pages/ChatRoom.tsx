@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Smile, Send, Globe, Search, Users, X, Reply } from "lucide-react";
+import { ArrowLeft, Smile, Send, Globe, Search, Users, X, Reply, SmilePlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessages } from "@/hooks/useMessages";
 import { useReactions } from "@/hooks/useReactions";
@@ -13,6 +13,7 @@ import FileUploadButton from "@/components/FileUploadButton";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import MessageSearch from "@/components/MessageSearch";
 import DateSeparator from "@/components/DateSeparator";
+import EmojiPicker from "@/components/EmojiPicker";
 
 export default function ChatRoom() {
   const { id: conversationId } = useParams<{ id: string }>();
@@ -23,6 +24,7 @@ export default function ChatRoom() {
   const { showOnline, showLastSeen } = useSettings();
   const [input, setInput] = useState("");
   const [showStickers, setShowStickers] = useState(false);
+  const [showEmojis, setShowEmojis] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<{ id: string; content?: string; sticker?: string; senderName?: string } | null>(null);
@@ -100,6 +102,10 @@ export default function ChatRoom() {
     await sendMessage(undefined, emoji, undefined, replyTo?.id);
     setShowStickers(false);
     setReplyTo(null);
+  };
+
+  const handleEmojiInsert = (emoji: string) => {
+    setInput((prev) => prev + emoji);
   };
 
   const handleReply = (msg: any) => {
@@ -258,6 +264,9 @@ export default function ChatRoom() {
       {showStickers && (
         <StickerPicker onSelect={handleStickerSend} onClose={() => setShowStickers(false)} />
       )}
+      {showEmojis && (
+        <EmojiPicker onSelect={handleEmojiInsert} onClose={() => setShowEmojis(false)} />
+      )}
 
       {replyTo && (
         <div className="bg-card/90 backdrop-blur-lg border-t border-border px-4 py-2 flex items-center gap-2">
@@ -274,12 +283,20 @@ export default function ChatRoom() {
       <div className="bg-card/90 backdrop-blur-lg border-t border-border px-3 py-3">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowStickers(!showStickers)}
+            onClick={() => { setShowStickers(!showStickers); setShowEmojis(false); }}
             className={`p-2.5 rounded-2xl transition-all duration-200 ${
               showStickers ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
             <Smile className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => { setShowEmojis(!showEmojis); setShowStickers(false); }}
+            className={`p-2.5 rounded-2xl transition-all duration-200 ${
+              showEmojis ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            <SmilePlus className="w-5 h-5" />
           </button>
           {conversationId && (
             <>
