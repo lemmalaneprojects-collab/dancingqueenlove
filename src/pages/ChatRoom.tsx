@@ -23,8 +23,6 @@ export default function ChatRoom() {
   const { messages, loading, sendMessage, otherTyping, setTyping, markAsRead, deleteMessage } = useMessages(conversationId);
   const { getReactionsForMessage, toggleReaction } = useReactions(conversationId);
   const { showOnline, showLastSeen } = useSettings();
-  const isGroup = conversationMeta?.isGroup || false;
-  const { markAllRead: markAllGroupRead } = useGroupReadReceipts(conversationId, isGroup);
   const [input, setInput] = useState("");
   const [showStickers, setShowStickers] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
@@ -36,6 +34,8 @@ export default function ChatRoom() {
     name: string | null;
     members: Array<{ user_id: string; display_name: string; avatar: string; sea_id: string; show_online: boolean; last_seen: string | null }>;
   } | null>(null);
+  const isGroup = conversationMeta?.isGroup || false;
+  const { markAllRead: markAllGroupRead } = useGroupReadReceipts(conversationId, isGroup);
   const bottomRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
